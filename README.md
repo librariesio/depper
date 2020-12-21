@@ -1,2 +1,3 @@
-# ingestor
-Consumer of ecosystem APIs.
+# depper
+
+A dapper consumer of ecoysstem APIs.

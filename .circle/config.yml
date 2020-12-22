@@ -1,17 +1,27 @@
 version: 2
+
+executors:
+  depper:
+
 jobs:
   deploy:
-    working_directory: ~/
+    docker:
+      - image: circleci/golang:1.15
+
+    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+
     steps:
+      - checkout
+
       - run:
           name: Setup gcp account credentials
-          command: echo $GCP_SERVICE_ACCOUNT_JSON | base64 -d > ~/.gcp_service_account.json
+          command: echo $GCP_SERVICE_ACCOUNT_JSON | base64 -d > ~gst/.gcp_service_account.json
 
       - run:
           name: Install Docker client
           command: |
             set -x
-            VER="17.03.0-ce"
+            VER="18.06.3-ce"
             curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
             tar -xz -C /tmp -f /tmp/docker-$VER.tgz
             mv /tmp/docker/* /usr/bin
@@ -51,4 +61,4 @@ workflows:
   version: 2
   circleci_build:
     jobs:
-      - deploy:
+      - deploy

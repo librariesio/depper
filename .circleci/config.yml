@@ -11,7 +11,7 @@ jobs:
 
       - add_ssh_keys:
           fingerprints:
-            - "b0:b0:20:93:55:c2:d3:a3:7f:14:d0:7f:5c:50:91:82"
+            - "68:60:10:0e:85:95:01:71:df:12:e7:77:51:5b:9f:0c"
 
       - run:
           name: Setup gcp account credentials

@@ -1,8 +1,5 @@
 version: 2
 
-executors:
-  depper:
-
 jobs:
   deploy:
     docker:
@@ -11,25 +8,15 @@ jobs:
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
 
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "b0:b0:20:93:55:c2:d3:a3:7f:14:d0:7f:5c:50:91:82"
+
       - checkout
 
       - run:
           name: Setup gcp account credentials
           command: echo $GCP_SERVICE_ACCOUNT_JSON | base64 -d > ~/.gcp_service_account.json
-
-
-      - run:
-          name: Install Docker client
-          command: |
-            echo "Docker version is"
-            docker -v
-
-          # command: |
-          #   set -x
-          #   VER="18.06.3-ce"
-          #   curl -L -o /tmp/docker-$VER.tgz https://download.docker.com/linux/static/stable/x86_64/docker-$VER.tgz
-          #   tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-          #   mv /tmp/docker/* /usr/bin
 
       - checkout:
           path: depper

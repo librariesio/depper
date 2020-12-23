@@ -12,8 +12,6 @@ jobs:
           fingerprints:
             - "b0:b0:20:93:55:c2:d3:a3:7f:14:d0:7f:5c:50:91:82"
 
-      - checkout
-
       - run:
           name: Setup gcp account credentials
           command: echo $GCP_SERVICE_ACCOUNT_JSON | base64 -d > ~/.gcp_service_account.json
@@ -53,4 +51,6 @@ workflows:
   version: 2
   circleci_build:
     jobs:
-      - deploy
+      - deploy:
+          context: prod-cluster-info
+

@@ -8,6 +8,7 @@ jobs:
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
 
     steps:
+
       - add_ssh_keys:
           fingerprints:
             - "b0:b0:20:93:55:c2:d3:a3:7f:14:d0:7f:5c:50:91:82"

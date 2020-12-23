@@ -24,7 +24,7 @@ jobs:
           name: Clone deployment project
           command: |
             echo "StrictHostKeyChecking no" >> ~/.ssh/config
-            git clone git@github.com:tidelift/deploy
+            git clone git@github.com:tidelift/deploy ~/deploy
 
       - setup_remote_docker
 

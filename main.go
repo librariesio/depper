@@ -13,7 +13,7 @@ func main() {
 	fmt.Println("Starting Depper...")
 
 	s := make(chan os.Signal, 1)
-	signal.Notify(s, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM)
 	c := cron.New()
 	c.AddFunc("* * * * *", func() { fmt.Println("Hello world from Depper") })
 	c.Start()

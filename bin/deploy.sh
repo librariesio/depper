@@ -8,4 +8,4 @@ gcloud --quiet container images describe ${TAGGED_IMAGE} || { status=$?; echo "C
 
 gcloud --quiet container images add-tag ${TAGGED_IMAGE} gcr.io/${GOOGLE_PROJECT}/depper:latest
 
-kubectl set image deployment/libraries-depper libraries-depper=${TAGGED_IMAGE}
+kubectl set image deployment/libraries-depper libraries-depper-container=${TAGGED_IMAGE}

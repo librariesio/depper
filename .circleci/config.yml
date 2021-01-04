@@ -1,7 +1,7 @@
 version: 2
 
 jobs:
-  deploy:
+  test:
     docker:
       - image: circleci/golang:1.15
 
@@ -11,44 +11,10 @@ jobs:
           fingerprints:
             - "68:60:10:0e:85:95:01:71:df:12:e7:77:51:5b:9f:0c"
 
-      - run:
-          name: Setup gcp account credentials
-          command: echo $GCP_SERVICE_ACCOUNT_JSON | base64 -d > ~/.gcp_service_account.json
-
       - checkout
-
-      - run:
-          name: Clone deployment project
-          command: |
-            echo "StrictHostKeyChecking no" >> ~/.ssh/config
-            git clone git@github.com:tidelift/deploy ~/deploy
-
-      - setup_remote_docker
-
-      - run:
-          name: Build image
-          command: ~/deploy/tl-deploy-circleci build_image
-
-      - run:
-          name: Upload image
-          command: ~/deploy/tl-deploy-circleci upload_image
-
-      - run:
-          name: Tag latest
-          command: ~/deploy/tl-deploy-circleci tag_latest
-
-      - run:
-          name: Deploy worker
-          command: ~/deploy/tl-deploy-circleci rollout libraries-depper
 
 workflows:
   version: 2
   circleci_build:
     jobs:
-      - deploy:
-          context: prod-cluster-info
-          # filters:
-          #   branches:
-          #     only:
-          #       - main
-
+      - test

@@ -4,6 +4,8 @@ jobs:
   test:
     docker:
       - image: circleci/golang:1.15
+    environment:
+      TEST_RESULTS: /tmp/test-results # path to where test results will be saved
 
     steps:
 
@@ -12,6 +14,45 @@ jobs:
             - "68:60:10:0e:85:95:01:71:df:12:e7:77:51:5b:9f:0c"
 
       - checkout
+
+      - run:
+          command: mkdir -p $TEST_RESULTS # create the test results directory
+
+      - restore_cache:
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - v1-go-cache-{{ arch }}-{{ .Branch }}-{{ checksum "go.mod" }}
+            - v1-go-cache-{{ arch }}-{{ .Branch }}-
+            - v1-go-cache-{{ arch }}-
+
+      - run:
+          command: go get github.com/jstemmer/go-junit-report
+      - run:
+          command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
+      - run:
+          command: go get -v -t -d ./...
+
+      - run:
+          name: "Check lint errors"
+          command: golangci-lint run
+      - run:
+          name: Run unit tests
+          # Store the results of our tests in the $TEST_RESULTS directory
+          command: |
+            trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
+            go test -vet -v ./... | tee ${TEST_RESULTS}/go-test.out
+
+      - save_cache:
+          key: v1-gem-cache-{{ arch }}-{{ .Branch }}-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg"
+
+      - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+          path: /tmp/test-results
+          destination: raw-test-output
+
+      - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+          path: /tmp/test-results
 
 workflows:
   version: 2

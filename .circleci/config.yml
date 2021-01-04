@@ -47,4 +47,8 @@ workflows:
     jobs:
       - deploy:
           context: prod-cluster-info
+          filters:
+            branches:
+              only:
+                - main
 

@@ -1,6 +1,6 @@
 # depper
 
-A dapper consumer of ecoysstem APIs.
+A dapper consumer of ecosystem APIs.
 
 # Deploying
 

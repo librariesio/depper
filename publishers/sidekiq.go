@@ -48,7 +48,7 @@ func randomHex(n int) string {
 }
 
 func createSyncJob(platform string, name string, version string) {
-	return &Job{
+	return &LibrariesJob{
 		Retry:      true,
 		Class:      "PackageManagerDownloadWorker",
 		Queue:      "critical",
@@ -61,27 +61,19 @@ func createSyncJob(platform string, name string, version string) {
 
 func (lib *LibrariesSidekiq) QueueSync(platform string, name string, version string) error {
 	key := getKey(platform, name, version)
-	value, err := lib.RedisClient.Get(context, key).Result()
-	var queueSync = false
 
-	if err == redis.Nil {
-		queueSync = true
-	} else if err != nil {
-		return err
-	}
-
-	err := lib.RedisClient.Set(context, key, "queued", 24*time.Hour)
+	value, err := lib.RedisClient.SetNX(context, key, 1, 24*time.Hour)
 	if err != nil {
 		return err
 	}
-	if queueSync {
+	if value == 1 {
 		log.Println(key)
-		return lib.ScheduleJob(createSyncJob(platform, name))
+		return lib.ScheduleJob(platform, name)
 	}
 }
 
-func (lib *LibrariesSidekiq) ScheduleJob(job Job) error {
-	encoded, err := json.Marshal(job)
+func (lib *LibrariesSidekiq) ScheduleJob(platform string, name string) error {
+	encoded, err := json.Marshal(createSyncJob(platform, name))
 	if err != nil {
 		return err
 	}

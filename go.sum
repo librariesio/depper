@@ -1,2 +1,4 @@
+github.com/buger/jsonparser v1.1.0 h1:EPAGdKZgZCON4ZcMD+h4l/NN4ndr6ijSpj4INh8PbUY=
+github.com/buger/jsonparser v1.1.0/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=

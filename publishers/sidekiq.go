@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const TTL = 24 * time.Hour
+
 type LibrariesSidekiq struct {
 	RedisClient redis.Client
 	Context     context
@@ -62,7 +64,7 @@ func createSyncJob(platform string, name string, version string) {
 func (lib *LibrariesSidekiq) QueueSync(platform string, name string, version string) error {
 	key := getKey(platform, name, version)
 
-	value, err := lib.RedisClient.SetNX(context, key, 1, 24*time.Hour)
+	value, err := lib.RedisClient.SetNX(context, key, 1, TTL)
 	if err != nil {
 		return err
 	}

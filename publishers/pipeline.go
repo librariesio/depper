@@ -6,7 +6,7 @@ import (
 	"github.com/librariesio/depper/data"
 )
 
-const MAX_QUEUE_SIZE = 1000
+const maxQueueSize = 1000
 
 type Publisher interface {
 	Publish(data.PackageVersion)
@@ -30,7 +30,7 @@ func (pipeline *Pipeline) Publish(packageVersion data.PackageVersion) {
 }
 
 func (pipeline *Pipeline) run() {
-	pipeline.queue = make(chan data.PackageVersion, MAX_QUEUE_SIZE)
+	pipeline.queue = make(chan data.PackageVersion, maxQueueSize)
 
 	for packageVersion := range pipeline.queue {
 		pipeline.process(packageVersion)

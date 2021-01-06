@@ -9,9 +9,8 @@ import (
 type LoggingPublisher struct{}
 
 func (publisher *LoggingPublisher) Publish(packageVersion data.PackageVersion) {
-	log.Printf("Depper Publishing platform=%s name=%s version=%s created=%s",
+	log.Printf("Depper Publishing platform=%s name=%s version=%s",
 		packageVersion.Platform,
 		packageVersion.Name,
-		packageVersion.Version,
-		packageVersion.CreatedAt)
+		packageVersion.Version)
 }

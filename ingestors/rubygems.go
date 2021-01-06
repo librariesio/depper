@@ -10,7 +10,7 @@ import (
 	"github.com/librariesio/depper/data"
 )
 
-const RubyGemsSchedule = "* * * * *"
+const RubyGemsSchedule = "*/5 * * * *"
 const RubyGemsJustUpdatedURL = "https://rubygems.org/api/v1/activity/just_updated.json"
 const RubyGemsLatestURL = "https://rubygems.org/api/v1/activity/latest.json"
 

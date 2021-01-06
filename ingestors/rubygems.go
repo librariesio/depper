@@ -2,6 +2,7 @@ package ingestors
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
@@ -26,21 +27,30 @@ func (ingestor *RubyGems) Schedule() string {
 }
 
 func (ingestor *RubyGems) Ingest() []*data.PackageVersion {
-	return append(
+	results := append(
 		ingestor.ingestURL(RubyGemsJustUpdatedURL),
 		ingestor.ingestURL(RubyGemsLatestURL)...,
 	)
+
+	ingestor.LatestRun = time.Now()
+
+	return results
 }
 
 func (ingestor *RubyGems) ingestURL(url string) []*data.PackageVersion {
-	response, _ := http.Get(url)
+	var results []*data.PackageVersion
+
+	response, err := http.Get(url)
+	if err != nil {
+		log.Print(err)
+		return results
+	}
+
 	defer response.Body.Close()
 
 	body, _ := ioutil.ReadAll(response.Body)
 
-	var results []*data.PackageVersion
-
-	jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+	_, err = jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 		name, _ := jsonparser.GetString(value, "name")
 		version, _ := jsonparser.GetString(value, "version")
 		createdAt, _ := jsonparser.GetString(value, "version_created_at")
@@ -55,6 +65,9 @@ func (ingestor *RubyGems) ingestURL(url string) []*data.PackageVersion {
 			})
 	})
 
-	ingestor.LatestRun = time.Now()
+	if err != nil {
+		log.Print(err)
+	}
+
 	return results
 }

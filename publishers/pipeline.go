@@ -40,8 +40,8 @@ func (pipeline *Pipeline) run() {
 func (pipeline *Pipeline) process(packageVersion data.PackageVersion) {
 	// TODO move deduping code here
 	for _, publisher := range pipeline.publishers {
-		// Publish each packageversion asynchronously to all publishers
-		go publisher.Publish(packageVersion)
+		// Publish each packageversion to all publishers
+		publisher.Publish(packageVersion)
 	}
 }
 

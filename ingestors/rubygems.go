@@ -26,7 +26,7 @@ func (ingestor *RubyGems) Schedule() string {
 	return RubyGemsSchedule
 }
 
-func (ingestor *RubyGems) Ingest() []*data.PackageVersion {
+func (ingestor *RubyGems) Ingest() []data.PackageVersion {
 	results := append(
 		ingestor.ingestURL(RubyGemsJustUpdatedURL),
 		ingestor.ingestURL(RubyGemsLatestURL)...,
@@ -37,8 +37,8 @@ func (ingestor *RubyGems) Ingest() []*data.PackageVersion {
 	return results
 }
 
-func (ingestor *RubyGems) ingestURL(url string) []*data.PackageVersion {
-	var results []*data.PackageVersion
+func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
+	var results []data.PackageVersion
 
 	response, err := http.Get(url)
 	if err != nil {
@@ -57,7 +57,7 @@ func (ingestor *RubyGems) ingestURL(url string) []*data.PackageVersion {
 		createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
 
 		results = append(results,
-			&data.PackageVersion{
+			data.PackageVersion{
 				Platform:  "rubygems",
 				Name:      name,
 				Version:   version,

@@ -6,5 +6,5 @@ import (
 
 type Ingestor interface {
 	Schedule() string
-	Ingest() []*data.PackageVersion
+	Ingest() []data.PackageVersion
 }

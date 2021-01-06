@@ -9,9 +9,9 @@ import (
 	"github.com/librariesio/depper/data"
 )
 
-const RUBYGEMS_SCHEDULE = "* * * * *"
-const RUBYGEMS_JUSTUPDATED_URL = "https://rubygems.org/api/v1/activity/just_updated.json"
-const RUBYGEMS_LATEST_URL = "https://rubygems.org/api/v1/activity/latest.json"
+const RubyGemsSchedule = "* * * * *"
+const RubyGemsJustUpdatedURL = "https://rubygems.org/api/v1/activity/just_updated.json"
+const RubyGemsLatestURL = "https://rubygems.org/api/v1/activity/latest.json"
 
 type RubyGems struct {
 	LatestRun time.Time
@@ -22,13 +22,13 @@ func NewRubyGems() *RubyGems {
 }
 
 func (ingestor *RubyGems) Schedule() string {
-	return RUBYGEMS_SCHEDULE
+	return RubyGemsSchedule
 }
 
 func (ingestor *RubyGems) Ingest() []*data.PackageVersion {
 	return append(
-		ingestor.ingestURL(RUBYGEMS_LATEST_URL),
-		ingestor.ingestURL(RUBYGEMS_JUSTUPDATED_URL)...,
+		ingestor.ingestURL(RubyGemsJustUpdatedURL),
+		ingestor.ingestURL(RubyGemsLatestURL)...,
 	)
 }
 

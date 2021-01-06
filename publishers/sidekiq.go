@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"io"
+	"os"
 	"time"
 )
 
@@ -29,8 +30,13 @@ type LibrariesJob struct {
 }
 
 func New() *LibrariesSidekiq {
+	address := "localhost:6379"
+	envVal, envFound := os.LookupEnv("REDIS_URL")
+	if envFound {
+		address = envVal
+	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     address,
 		Password: "",
 		DB:       0,
 	})
@@ -64,11 +70,11 @@ func createSyncJob(platform string, name string, version string) {
 func (lib *LibrariesSidekiq) QueueSync(platform string, name string, version string) error {
 	key := getKey(platform, name, version)
 
-	value, err := lib.RedisClient.SetNX(context, key, 1, TTL)
+	value, err := lib.RedisClient.SetNX(context, key, true, TTL)
 	if err != nil {
 		return err
 	}
-	if value == 1 {
+	if value {
 		log.Println(key)
 		return lib.ScheduleJob(platform, name)
 	}

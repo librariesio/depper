@@ -47,11 +47,13 @@ func (depper *Depper) registerIngestors() {
 
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 	c := cron.New()
-	_, err := c.AddFunc(ingestor.Schedule(), func() {
+	injestAndPublish := func() {
 		for _, packageVersion := range ingestor.Ingest() {
 			depper.pipeline.Publish(packageVersion)
 		}
-	})
+	}
+
+	_, err := c.AddFunc(ingestor.Schedule(), injestAndPublish)
 
 	if err != nil {
 		log.Fatalf("Error: %v", err)
@@ -59,7 +61,6 @@ func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 
 	c.Start()
 
-	// for _, packageVersion := range ingestor.Ingest() {
-	// 	depper.pipeline.Publish(packageVersion)
-	// }
+	// For now we'll run once upon registration
+	injestAndPublish()
 }

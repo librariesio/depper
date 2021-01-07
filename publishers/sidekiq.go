@@ -6,8 +6,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis/v8"
+	"github.com/librariesio/depper/data"
+	"github.com/mediocregopher/radix/v3"
 	"io"
+	"log"
 	"os"
 	"time"
 )
@@ -15,8 +17,8 @@ import (
 const TTL = 24 * time.Hour
 
 type LibrariesSidekiq struct {
-	RedisClient redis.Client
-	Context     context
+	RedisClient *radix.Pool
+	Context     context.Context
 }
 
 type LibrariesJob struct {
@@ -26,27 +28,26 @@ type LibrariesJob struct {
 	Retry      bool     `json:"retry"`
 	JID        string   `json:"jid"`
 	CreatedAt  int64    `json:"created_at"`
-	EnqueuedAt in64     `json:"enqueued_at"`
+	EnqueuedAt int64    `json:"enqueued_at"`
 }
 
-func New() *LibrariesSidekiq {
+func NewLibrariesSidekiq() *LibrariesSidekiq {
 	address := "localhost:6379"
 	envVal, envFound := os.LookupEnv("REDIS_URL")
 	if envFound {
 		address = envVal
 	}
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     address,
-		Password: "",
-		DB:       0,
-	})
+	client, err := radix.NewPool("tcp", address, 10)
+	if err != nil {
+		log.Fatalf("Error connecting to redis")
+	}
 	return &LibrariesSidekiq{
-		RedisClient: rdb,
+		RedisClient: client,
 		Context:     context.Background(),
 	}
 }
-func getKey(platform string, name string, version string) string {
-	return fmt.Sprintf("depper:ingest:%s:%s:%s", platform, name, version)
+func getKey(packageVersion data.PackageVersion) string {
+	return fmt.Sprintf("depper:ingest:%s:%s:%s", packageVersion.Platform, packageVersion.Name, packageVersion.Platform)
 }
 
 func randomHex(n int) string {
@@ -55,7 +56,7 @@ func randomHex(n int) string {
 	return hex.EncodeToString(id)
 }
 
-func createSyncJob(platform string, name string, version string) {
+func createSyncJob(packageVersion data.PackageVersion) *LibrariesJob {
 	return &LibrariesJob{
 		Retry:      true,
 		Class:      "PackageManagerDownloadWorker",
@@ -63,27 +64,34 @@ func createSyncJob(platform string, name string, version string) {
 		JID:        randomHex(12),
 		EnqueuedAt: time.Now().Unix(),
 		CreatedAt:  time.Now().Unix(),
-		Args:       [2]string{platform, name},
+		Args:       []string{packageVersion.Platform, packageVersion.Name},
 	}
 }
 
-func (lib *LibrariesSidekiq) QueueSync(platform string, name string, version string) error {
-	key := getKey(platform, name, version)
-
-	value, err := lib.RedisClient.SetNX(context, key, true, TTL)
+func (lib *LibrariesSidekiq) Publish(packageVersion data.PackageVersion) {
+	key := getKey(packageVersion)
+	log.Println(key)
+	var wasSet bool
+	err := lib.RedisClient.Do(radix.Cmd(&wasSet, "SETNX", key, "true"))
 	if err != nil {
-		return err
+		fmt.Errorf("Error trying to set key for redis %g", err)
+		return
 	}
-	if value {
+	if wasSet {
 		log.Println(key)
-		return lib.ScheduleJob(platform, name)
+		lib.scheduleJob(packageVersion)
 	}
 }
 
-func (lib *LibrariesSidekiq) ScheduleJob(platform string, name string) error {
-	encoded, err := json.Marshal(createSyncJob(platform, name))
+func (lib *LibrariesSidekiq) scheduleJob(packageVersion data.PackageVersion) {
+	job := createSyncJob(packageVersion)
+	encoded, err := json.Marshal(job)
 	if err != nil {
-		return err
+		fmt.Errorf("Error encoding sync job for sidekiq %g", err)
+		return
 	}
-	return lib.RedisClient.LPush(fmt.Sprintf("queue:%s", job.Queue), string(encoded))
+	err = lib.RedisClient.Do(radix.Cmd(nil, "LPUSH", fmt.Sprintf("queue:%s", job.Queue), string(encoded)))
+	if err != nil {
+		fmt.Errorf("Error calling redis.LPush to enqueue job: %g", err)
+	}
 }

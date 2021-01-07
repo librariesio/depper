@@ -54,7 +54,10 @@ func getKey(packageVersion data.PackageVersion) string {
 
 func randomHex(n int) string {
 	id := make([]byte, n)
-	io.ReadFull(rand.Reader, id)
+	_, err := io.ReadFull(rand.Reader, id)
+	if err != nil {
+		log.Println("Error making random hex")
+	}
 	return hex.EncodeToString(id)
 }
 
@@ -75,7 +78,7 @@ func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
 
 	wasSet, err := lib.RedisClient.SetNX(lib.Context, key, true, TTL).Result()
 	if err != nil {
-		log.Println("Error trying to set key for redis %g", err)
+		log.Printf("Error trying to set key for redis %g", err)
 		return
 	}
 	if wasSet {
@@ -88,7 +91,7 @@ func (lib *Sidekiq) scheduleJob(packageVersion data.PackageVersion) {
 	job := createSyncJob(packageVersion)
 	encoded, err := json.Marshal(job)
 	if err != nil {
-		log.Println("Error encoding sync job for sidekiq %g", err)
+		log.Printf("Error encoding sync job for sidekiq %g", err)
 		return
 	}
 	lib.RedisClient.LPush(lib.Context, fmt.Sprintf("queue:%s", job.Queue), string(encoded))

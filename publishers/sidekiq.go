@@ -16,7 +16,7 @@ import (
 
 const TTL = 24 * time.Hour
 
-type LibrariesSidekiq struct {
+type Sidekiq struct {
 	RedisClient *radix.Pool
 	Context     context.Context
 }
@@ -31,7 +31,7 @@ type LibrariesJob struct {
 	EnqueuedAt int64    `json:"enqueued_at"`
 }
 
-func NewLibrariesSidekiq() *LibrariesSidekiq {
+func NewSidekiq() *Sidekiq {
 	address := "localhost:6379"
 	envVal, envFound := os.LookupEnv("REDIS_URL")
 	if envFound {
@@ -41,13 +41,13 @@ func NewLibrariesSidekiq() *LibrariesSidekiq {
 	if err != nil {
 		log.Fatalf("Error connecting to redis")
 	}
-	return &LibrariesSidekiq{
+	return &Sidekiq{
 		RedisClient: client,
 		Context:     context.Background(),
 	}
 }
 func getKey(packageVersion data.PackageVersion) string {
-	return fmt.Sprintf("depper:ingest:%s:%s:%s", packageVersion.Platform, packageVersion.Name, packageVersion.Platform)
+	return fmt.Sprintf("depper:ingest:%s:%s:%s", packageVersion.Platform, packageVersion.Name, packageVersion.Version)
 }
 
 func randomHex(n int) string {
@@ -68,7 +68,7 @@ func createSyncJob(packageVersion data.PackageVersion) *LibrariesJob {
 	}
 }
 
-func (lib *LibrariesSidekiq) Publish(packageVersion data.PackageVersion) {
+func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
 	key := getKey(packageVersion)
 	log.Println(key)
 	var wasSet bool
@@ -83,7 +83,7 @@ func (lib *LibrariesSidekiq) Publish(packageVersion data.PackageVersion) {
 	}
 }
 
-func (lib *LibrariesSidekiq) scheduleJob(packageVersion data.PackageVersion) {
+func (lib *Sidekiq) scheduleJob(packageVersion data.PackageVersion) {
 	job := createSyncJob(packageVersion)
 	encoded, err := json.Marshal(job)
 	if err != nil {

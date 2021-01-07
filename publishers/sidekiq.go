@@ -70,7 +70,6 @@ func createSyncJob(packageVersion data.PackageVersion) *LibrariesJob {
 
 func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
 	key := getKey(packageVersion)
-	log.Println(key)
 	var wasSet bool
 	err := lib.RedisClient.Do(radix.Cmd(&wasSet, "SETNX", key, "true"))
 	if err != nil {

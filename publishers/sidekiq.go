@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"github.com/librariesio/depper/data"
-	"github.com/mediocregopher/radix/v3"
 	"io"
 	"log"
 	"os"
@@ -17,7 +17,7 @@ import (
 const TTL = 24 * time.Hour
 
 type Sidekiq struct {
-	RedisClient *radix.Pool
+	RedisClient *redis.Client
 	Context     context.Context
 }
 
@@ -37,12 +37,14 @@ func NewSidekiq() *Sidekiq {
 	if envFound {
 		address = envVal
 	}
-	client, err := radix.NewPool("tcp", address, 10)
-	if err != nil {
-		log.Fatalf("Error connecting to redis")
-	}
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     address,
+		Password: "",
+		DB:       0,
+	})
+
 	return &Sidekiq{
-		RedisClient: client,
+		RedisClient: rdb,
 		Context:     context.Background(),
 	}
 }
@@ -70,10 +72,10 @@ func createSyncJob(packageVersion data.PackageVersion) *LibrariesJob {
 
 func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
 	key := getKey(packageVersion)
-	var wasSet bool
-	err := lib.RedisClient.Do(radix.Cmd(&wasSet, "SETNX", key, "true"))
+
+	wasSet, err := lib.RedisClient.SetNX(lib.Context, key, true, TTL).Result()
 	if err != nil {
-		fmt.Errorf("Error trying to set key for redis %g", err)
+		log.Println("Error trying to set key for redis %g", err)
 		return
 	}
 	if wasSet {
@@ -86,11 +88,8 @@ func (lib *Sidekiq) scheduleJob(packageVersion data.PackageVersion) {
 	job := createSyncJob(packageVersion)
 	encoded, err := json.Marshal(job)
 	if err != nil {
-		fmt.Errorf("Error encoding sync job for sidekiq %g", err)
+		log.Println("Error encoding sync job for sidekiq %g", err)
 		return
 	}
-	err = lib.RedisClient.Do(radix.Cmd(nil, "LPUSH", fmt.Sprintf("queue:%s", job.Queue), string(encoded)))
-	if err != nil {
-		fmt.Errorf("Error calling redis.LPush to enqueue job: %g", err)
-	}
+	lib.RedisClient.LPush(lib.Context, fmt.Sprintf("queue:%s", job.Queue), string(encoded))
 }

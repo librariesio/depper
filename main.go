@@ -37,7 +37,7 @@ func main() {
 func createPipeline() *publishers.Pipeline {
 	pipeline := publishers.NewPipeline()
 	pipeline.Register(&publishers.LoggingPublisher{})
-
+	pipeline.Register(publishers.NewSidekiq())
 	return pipeline
 }
 

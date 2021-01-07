@@ -7,16 +7,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis/v8"
+	"github.com/librariesio/depper/data"
 	"io"
+	"log"
 	"os"
 	"time"
 )
 
 const TTL = 24 * time.Hour
 
-type LibrariesSidekiq struct {
-	RedisClient redis.Client
-	Context     context
+type Sidekiq struct {
+	RedisClient *redis.Client
+	Context     context.Context
 }
 
 type LibrariesJob struct {
@@ -26,10 +28,10 @@ type LibrariesJob struct {
 	Retry      bool     `json:"retry"`
 	JID        string   `json:"jid"`
 	CreatedAt  int64    `json:"created_at"`
-	EnqueuedAt in64     `json:"enqueued_at"`
+	EnqueuedAt int64    `json:"enqueued_at"`
 }
 
-func New() *LibrariesSidekiq {
+func NewSidekiq() *Sidekiq {
 	address := "localhost:6379"
 	envVal, envFound := os.LookupEnv("REDIS_URL")
 	if envFound {
@@ -40,22 +42,26 @@ func New() *LibrariesSidekiq {
 		Password: "",
 		DB:       0,
 	})
-	return &LibrariesSidekiq{
+
+	return &Sidekiq{
 		RedisClient: rdb,
 		Context:     context.Background(),
 	}
 }
-func getKey(platform string, name string, version string) string {
-	return fmt.Sprintf("depper:ingest:%s:%s:%s", platform, name, version)
+func getKey(packageVersion data.PackageVersion) string {
+	return fmt.Sprintf("depper:ingest:%s:%s:%s", packageVersion.Platform, packageVersion.Name, packageVersion.Version)
 }
 
 func randomHex(n int) string {
 	id := make([]byte, n)
-	io.ReadFull(rand.Reader, id)
+	_, err := io.ReadFull(rand.Reader, id)
+	if err != nil {
+		log.Println("Error making random hex")
+	}
 	return hex.EncodeToString(id)
 }
 
-func createSyncJob(platform string, name string, version string) {
+func createSyncJob(packageVersion data.PackageVersion) *LibrariesJob {
 	return &LibrariesJob{
 		Retry:      true,
 		Class:      "PackageManagerDownloadWorker",
@@ -63,27 +69,30 @@ func createSyncJob(platform string, name string, version string) {
 		JID:        randomHex(12),
 		EnqueuedAt: time.Now().Unix(),
 		CreatedAt:  time.Now().Unix(),
-		Args:       [2]string{platform, name},
+		Args:       []string{packageVersion.Platform, packageVersion.Name},
 	}
 }
 
-func (lib *LibrariesSidekiq) QueueSync(platform string, name string, version string) error {
-	key := getKey(platform, name, version)
+func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
+	key := getKey(packageVersion)
 
-	value, err := lib.RedisClient.SetNX(context, key, true, TTL)
+	wasSet, err := lib.RedisClient.SetNX(lib.Context, key, true, TTL).Result()
 	if err != nil {
-		return err
+		log.Printf("Error trying to set key for redis %g", err)
+		return
 	}
-	if value {
+	if wasSet {
 		log.Println(key)
-		return lib.ScheduleJob(platform, name)
+		lib.scheduleJob(packageVersion)
 	}
 }
 
-func (lib *LibrariesSidekiq) ScheduleJob(platform string, name string) error {
-	encoded, err := json.Marshal(createSyncJob(platform, name))
+func (lib *Sidekiq) scheduleJob(packageVersion data.PackageVersion) {
+	job := createSyncJob(packageVersion)
+	encoded, err := json.Marshal(job)
 	if err != nil {
-		return err
+		log.Printf("Error encoding sync job for sidekiq %g", err)
+		return
 	}
-	return lib.RedisClient.LPush(fmt.Sprintf("queue:%s", job.Queue), string(encoded))
+	lib.RedisClient.LPush(lib.Context, fmt.Sprintf("queue:%s", job.Queue), string(encoded))
 }

@@ -34,7 +34,7 @@ type LibrariesJob struct {
 
 func NewSidekiq() *Sidekiq {
 	address := "localhost:6379"
-	envVal, envFound := os.LookupEnv("REDIS_CLOUD_URL")
+	envVal, envFound := os.LookupEnv("REDISCLOUD_URL")
 	if envFound {
 		address = envVal
 	}

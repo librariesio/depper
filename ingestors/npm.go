@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	kivik "github.com/go-kivik/kivik/v4"
+	"github.com/go-redis/redis/v8"
 
 	_ "github.com/go-kivik/couchdb/v4" // The CouchDB driver
 	// "github.com/go-kivik/kivik"
@@ -14,12 +16,27 @@ import (
 	"github.com/librariesio/depper/data"
 )
 
-const NpmSchedule = "*/10 * * * *"
+// const NpmSchedule = "*/10 * * * *"
 const NpmRegistryHostname = "https://replicate.npmjs.com"
 const NpmRegistryDatabase = "registry"
+const npmLatestSequenceRedisKey = "npm:updates:latest_sequence"
 
 type Npm struct {
-	LatestRun time.Time
+	redisClient *redis.Client
+}
+
+func NewNpm() *Npm {
+	address := "localhost:6379"
+	envVal, envFound := os.LookupEnv("REDIS_URL")
+	if envFound {
+		address = envVal
+	}
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     address,
+		Password: "",
+		DB:       0,
+	})
+	return &Npm{rdb}
 }
 
 type npmChangeDoc struct {
@@ -32,43 +49,20 @@ type npmChangeDoc struct {
 	Time map[string]string `json:"time"`
 }
 
-func NewNpm() *Npm {
-	return &Npm{}
-}
-
-func (ingestor *Npm) Schedule() string {
-	return NpmSchedule
-}
-
-func (ingestor *Npm) Ingest() []data.PackageVersion {
-	// results := append(
-	// 	ingestor.ingestURL(NpmJustUpdatedURL),
-	// 	ingestor.ingestURL(NpmLatestURL)...,
-	// )
-
-	// ingestor.LatestRun = time.Now()
-
-	updates := ingestor.ingestCouchUpdates()
-	fmt.Printf("Updates: %s\n", updates)
-
-	results := append(
-		[]data.PackageVersion{},
-		updates...,
-	)
-
-	return results
-}
-
-func (ingestor *Npm) ingestCouchUpdates() []data.PackageVersion {
-	var results []data.PackageVersion
+func (ingestor *Npm) Ingest(results chan data.PackageVersion) {
+	since, err := ingestor.GetLatestSequence()
+	if err != nil {
+		log.Fatal(err)
+	} else if since == "" {
+		since = "now"
+	}
 
 	client, err := kivik.New("couch", NpmRegistryHostname)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	db := client.DB(NpmRegistryDatabase)
-	changes, err := db.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": "now", "include_docs": true})
+	changes, err := db.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,47 +87,33 @@ func (ingestor *Npm) ingestCouchUpdates() []data.PackageVersion {
 				}
 			}
 			if latestVersion != "" {
-				results = append(results)
+				results <- data.PackageVersion{
+					Platform:  "NPM",
+					Name:      doc.Name,
+					Version:   latestVersion,
+					CreatedAt: latestTime,
+				}
+				if err := ingestor.SetLatestSequence(changes.Seq()); err != nil {
+					log.Fatalf(err.Error())
+				}
 			}
-			fmt.Printf("  Time is: %s\t=>\t%s\n", latestVersion, latestTime)
-		} else {
-			break // wait for next ingestor run
 		}
 	}
-	return results
 }
 
-// func (ingestor *Npm) ingestURL(url string) []data.PackageVersion {
-// 	var results []data.PackageVersion
+func (ingestor *Npm) SetLatestSequence(seq string) error {
+	err := ingestor.redisClient.Set(context.Background(), npmLatestSequenceRedisKey, seq, 0).Err()
+	if err != nil {
+		return fmt.Errorf("Error trying to set key %s for redis %g", err)
+	}
+	return nil
+}
 
-// 	response, err := http.Get(url)
-// 	if err != nil {
-// 		log.Print(err)
-// 		return results
-// 	}
-
-// 	defer response.Body.Close()
-
-// 	body, _ := ioutil.ReadAll(response.Body)
-
-// 	_, err = jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
-// 		name, _ := jsonparser.GetString(value, "name")
-// 		version, _ := jsonparser.GetString(value, "version")
-// 		createdAt, _ := jsonparser.GetString(value, "version_created_at")
-// 		createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
-
-// 		results = append(results,
-// 			data.PackageVersion{
-// 				Platform:  "npm",
-// 				Name:      name,
-// 				Version:   version,
-// 				CreatedAt: createdAtTime,
-// 			})
-// 	})
-
-// 	if err != nil {
-// 		log.Print(err)
-// 	}
-
-// 	return results
-// }
+func (ingestor *Npm) GetLatestSequence() (string, error) {
+	val, err := ingestor.redisClient.Get(context.Background(), npmLatestSequenceRedisKey).Result()
+	if err != nil && err != redis.Nil {
+		return "", err
+	} else {
+		return val, nil
+	}
+}

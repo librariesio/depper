@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/librariesio/depper/data"
 	"github.com/librariesio/depper/ingestors"
 	"github.com/librariesio/depper/publishers"
 	"github.com/robfig/cron/v3"
@@ -42,19 +43,19 @@ func createPipeline() *publishers.Pipeline {
 }
 
 func (depper *Depper) registerIngestors() {
-	// depper.registerIngestor(&ingestors.RubyGems{})
-	depper.registerIngestor(&ingestors.Npm{})
+	depper.registerIngestor(ingestors.NewRubyGems())
+	depper.registerIngestorStream(ingestors.NewNpm())
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 	c := cron.New()
-	injestAndPublish := func() {
+	ingestAndPublish := func() {
 		for _, packageVersion := range ingestor.Ingest() {
 			depper.pipeline.Publish(packageVersion)
 		}
 	}
 
-	_, err := c.AddFunc(ingestor.Schedule(), injestAndPublish)
+	_, err := c.AddFunc(ingestor.Schedule(), ingestAndPublish)
 
 	if err != nil {
 		log.Fatalf("Error: %v", err)
@@ -63,5 +64,18 @@ func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 	c.Start()
 
 	// For now we'll run once upon registration
-	injestAndPublish()
+	ingestAndPublish()
+}
+
+func (depper *Depper) registerIngestorStream(ingestor ingestors.StreamingIngestor) {
+	// Unbuffered channel so that the StreamingIngestor will block while pulling
+	// next updates until Publish() has grabbed the last one.
+	packageVersions := make(chan data.PackageVersion)
+
+	// For now we'll run once upon registration
+	go ingestor.Ingest(packageVersions)
+
+	for packageVersion := range packageVersions {
+		depper.pipeline.Publish(packageVersion)
+	}
 }

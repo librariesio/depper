@@ -42,7 +42,8 @@ func createPipeline() *publishers.Pipeline {
 }
 
 func (depper *Depper) registerIngestors() {
-	depper.registerIngestor(&ingestors.RubyGems{})
+	// depper.registerIngestor(&ingestors.RubyGems{})
+	depper.registerIngestor(&ingestors.Npm{})
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {

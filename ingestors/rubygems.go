@@ -58,7 +58,7 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 
 		results = append(results,
 			data.PackageVersion{
-				Platform:  "rubygems",
+				Platform:  "Rubygems",
 				Name:      name,
 				Version:   version,
 				CreatedAt: createdAtTime,

@@ -6,12 +6,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/go-redis/redis/v8"
-	"github.com/librariesio/depper/data"
 	"io"
 	"log"
 	"os"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/librariesio/depper/data"
 )
 
 const TTL = 24 * time.Hour
@@ -33,7 +34,7 @@ type LibrariesJob struct {
 
 func NewSidekiq() *Sidekiq {
 	address := "localhost:6379"
-	envVal, envFound := os.LookupEnv("REDIS_URL")
+	envVal, envFound := os.LookupEnv("REDIS_CLOUD_URL")
 	if envFound {
 		address = envVal
 	}
@@ -82,7 +83,7 @@ func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
 		return
 	}
 	if wasSet {
-		log.Println(key)
+		log.Printf("Sidekiq Publisher %s", key)
 		lib.scheduleJob(packageVersion)
 	}
 }

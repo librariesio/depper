@@ -11,21 +11,18 @@ import (
 	"github.com/go-redis/redis/v8"
 
 	_ "github.com/go-kivik/couchdb/v4" // The CouchDB driver
-	// "github.com/go-kivik/kivik"
-	// "github.com/go-kivik/kivik/driver"
 	"github.com/librariesio/depper/data"
 )
 
-// const NpmSchedule = "*/10 * * * *"
-const NpmRegistryHostname = "https://replicate.npmjs.com"
-const NpmRegistryDatabase = "registry"
-const npmLatestSequenceRedisKey = "npm:updates:latest_sequence"
+const NPMRegistryHostname = "https://replicate.npmjs.com"
+const NPMRegistryDatabase = "registry"
+const NPMLatestSequenceRedisKey = "npm:updates:latest_sequence"
 
-type Npm struct {
+type NPM struct {
 	redisClient *redis.Client
 }
 
-func NewNpm() *Npm {
+func NewNPM() *NPM {
 	address := "localhost:6379"
 	envVal, envFound := os.LookupEnv("REDIS_URL")
 	if envFound {
@@ -36,10 +33,10 @@ func NewNpm() *Npm {
 		Password: "",
 		DB:       0,
 	})
-	return &Npm{rdb}
+	return &NPM{rdb}
 }
 
-type npmChangeDoc struct {
+type NPMChangeDoc struct {
 	ID       string `json:"_id"`
 	Rev      string `json:"_rev,omitempty"`
 	Name     string `json:"name"`
@@ -49,7 +46,7 @@ type npmChangeDoc struct {
 	Time map[string]string `json:"time"`
 }
 
-func (ingestor *Npm) Ingest(results chan data.PackageVersion) {
+func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	since, err := ingestor.GetLatestSequence()
 	if err != nil {
 		log.Fatal(err)
@@ -57,11 +54,11 @@ func (ingestor *Npm) Ingest(results chan data.PackageVersion) {
 		since = "now"
 	}
 
-	client, err := kivik.New("couch", NpmRegistryHostname)
+	client, err := kivik.New("couch", NPMRegistryHostname)
 	if err != nil {
 		log.Fatal(err)
 	}
-	db := client.DB(NpmRegistryDatabase)
+	db := client.DB(NPMRegistryDatabase)
 	changes, err := db.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
 	if err != nil {
 		log.Fatal(err)
@@ -70,7 +67,7 @@ func (ingestor *Npm) Ingest(results chan data.PackageVersion) {
 
 	for {
 		if changes.Next() {
-			var doc npmChangeDoc
+			var doc NPMChangeDoc
 			if err := changes.ScanDoc(&doc); err != nil {
 				log.Fatal("Error parsing json doc at sequence %s with ID %s\n", changes.Seq(), changes.ID())
 			}
@@ -97,20 +94,22 @@ func (ingestor *Npm) Ingest(results chan data.PackageVersion) {
 					log.Fatalf(err.Error())
 				}
 			}
+		} else {
+			fmt.Printf("Nope")
 		}
 	}
 }
 
-func (ingestor *Npm) SetLatestSequence(seq string) error {
-	err := ingestor.redisClient.Set(context.Background(), npmLatestSequenceRedisKey, seq, 0).Err()
+func (ingestor *NPM) SetLatestSequence(seq string) error {
+	err := ingestor.redisClient.Set(context.Background(), NPMLatestSequenceRedisKey, seq, 0).Err()
 	if err != nil {
 		return fmt.Errorf("Error trying to set key %s for redis %g", err)
 	}
 	return nil
 }
 
-func (ingestor *Npm) GetLatestSequence() (string, error) {
-	val, err := ingestor.redisClient.Get(context.Background(), npmLatestSequenceRedisKey).Result()
+func (ingestor *NPM) GetLatestSequence() (string, error) {
+	val, err := ingestor.redisClient.Get(context.Background(), NPMLatestSequenceRedisKey).Result()
 	if err != nil && err != redis.Nil {
 		return "", err
 	} else {

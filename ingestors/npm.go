@@ -10,7 +10,7 @@ import (
 	kivik "github.com/go-kivik/kivik/v4"
 	"github.com/go-redis/redis/v8"
 
-	_ "github.com/go-kivik/couchdb/v4" // The CouchDB driver
+	_ "github.com/go-kivik/couchdb/v4"
 	"github.com/librariesio/depper/data"
 )
 

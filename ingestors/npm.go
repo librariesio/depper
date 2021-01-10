@@ -94,8 +94,12 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 					log.Fatalf(err.Error())
 				}
 			}
+		} else if changes.EOQ() {
+			fmt.Printf("EOQ. Retrying in 5 seconds.\n")
+			time.Sleep(5 * time.Second)
 		} else {
-			fmt.Printf("Nope")
+			fmt.Printf("Error: %s. Retrying in 5 seconds.\n", changes.Err())
+			time.Sleep(5 * time.Second)
 		}
 	}
 }

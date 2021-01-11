@@ -19,21 +19,15 @@ const NPMRegistryDatabase = "registry"
 const NPMLatestSequenceRedisKey = "npm:updates:latest_sequence"
 
 type NPM struct {
+	couchClient *kivik.Client
 	redisClient *redis.Client
 }
 
 func NewNPM() *NPM {
-	address := "localhost:6379"
-	envVal, envFound := os.LookupEnv("REDIS_URL")
-	if envFound {
-		address = envVal
-	}
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     address,
-		Password: "",
-		DB:       0,
-	})
-	return &NPM{rdb}
+	couchClient := getCouchClient()
+	rdb := getRedisClient()
+
+	return &NPM{couchClient, rdb}
 }
 
 type NPMChangeDoc struct {
@@ -51,13 +45,10 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Depper Ingestor sequence=%s", since)
 
-	client, err := kivik.New("couch", NPMRegistryHostname)
-	if err != nil {
-		log.Fatal(err)
-	}
-	db := client.DB(NPMRegistryDatabase)
-	changes, err := db.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
+	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
+	changes, err := couchDb.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,7 +89,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		} else {
 			log.Printf("Error: %s. Reconnecting in 5 seconds.\n", changes.Err())
 			time.Sleep(5 * time.Second)
-			db := client.DB(NPMRegistryDatabase)
+			db := ingestor.couchClient.DB(NPMRegistryDatabase)
 			changes, err = db.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
 			if err != nil {
 				log.Fatal(err)
@@ -125,4 +116,25 @@ func (ingestor *NPM) GetLatestSequence() (string, error) {
 	} else {
 		return val, nil
 	}
+}
+
+func getRedisClient() *redis.Client {
+	address := "localhost:6379"
+	envVal, envFound := os.LookupEnv("REDIS_URL")
+	if envFound {
+		address = envVal
+	}
+	return redis.NewClient(&redis.Options{
+		Addr:     address,
+		Password: "",
+		DB:       0,
+	})
+}
+
+func getCouchClient() *kivik.Client {
+	kivikClient, err := kivik.New("couch", NPMRegistryHostname)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return kivikClient
 }

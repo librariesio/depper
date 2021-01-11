@@ -50,8 +50,6 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	since, err := ingestor.GetLatestSequence()
 	if err != nil {
 		log.Fatal(err)
-	} else if since == "" {
-		since = "now"
 	}
 
 	client, err := kivik.New("couch", NPMRegistryHostname)
@@ -98,7 +96,6 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 			log.Printf("EOQ. Retrying in 5 seconds.\n")
 			time.Sleep(5 * time.Second)
 		} else {
-			// TODO this seems to just fail after error and keeps repeating. Reconnect db?
 			log.Printf("Error: %s. Reconnecting in 5 seconds.\n", changes.Err())
 			time.Sleep(5 * time.Second)
 			db := client.DB(NPMRegistryDatabase)
@@ -121,7 +118,9 @@ func (ingestor *NPM) SetLatestSequence(seq string) error {
 
 func (ingestor *NPM) GetLatestSequence() (string, error) {
 	val, err := ingestor.redisClient.Get(context.Background(), NPMLatestSequenceRedisKey).Result()
-	if err != nil && err != redis.Nil {
+	if err == redis.Nil {
+		return "now", nil
+	} else if err != nil {
 		return "", err
 	} else {
 		return val, nil

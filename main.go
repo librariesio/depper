@@ -22,6 +22,8 @@ type Depper struct {
 func main() {
 	fmt.Println("Starting Depper...")
 
+	log.SetOutput(os.Stdout)
+
 	depper := &Depper{
 		pipeline:      createPipeline(),
 		signalHandler: make(chan os.Signal, 1),

@@ -45,7 +45,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Depper Ingestor sequence=%s", since)
+	log.Printf("Depper Ingestor platform=npm sequence=%s", since)
 
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
 	changes, err := couchDb.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})

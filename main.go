@@ -72,10 +72,10 @@ func (depper *Depper) registerIngestorStream(ingestor ingestors.StreamingIngesto
 	// next updates until Publish() has grabbed the last one.
 	packageVersions := make(chan data.PackageVersion)
 
-	// For now we'll run once upon registration
 	go ingestor.Ingest(packageVersions)
-
-	for packageVersion := range packageVersions {
-		depper.pipeline.Publish(packageVersion)
-	}
+	go func() {
+		for packageVersion := range packageVersions {
+			depper.pipeline.Publish(packageVersion)
+		}
+	}()
 }

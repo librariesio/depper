@@ -58,7 +58,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		if changes.Next() {
 			var doc NPMChangeDoc
 			if err := changes.ScanDoc(&doc); err != nil {
-				log.Fatal("Error parsing json doc at sequence %s with ID %s\n", changes.Seq(), changes.ID())
+				log.Fatalf("Error parsing json doc at sequence %s with ID %s\n", changes.Seq(), changes.ID())
 			}
 			var latestVersion string
 			var latestTime time.Time
@@ -89,12 +89,11 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		} else {
 			log.Printf("Error: %s. Reconnecting in 5 seconds.\n", changes.Err())
 			time.Sleep(5 * time.Second)
-			db := ingestor.couchClient.DB(NPMRegistryDatabase)
-			changes, err = db.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
+			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
+			changes, err = couchDb.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
 			if err != nil {
 				log.Fatal(err)
 			}
-			defer changes.Close()
 		}
 	}
 }
@@ -102,7 +101,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 func (ingestor *NPM) SetLatestSequence(seq string) error {
 	err := ingestor.redisClient.Set(context.Background(), NPMLatestSequenceRedisKey, seq, 0).Err()
 	if err != nil {
-		return fmt.Errorf("Error trying to set key %s for redis %g", err)
+		return fmt.Errorf("Error trying to set key %s for redis: %s", seq, err)
 	}
 	return nil
 }

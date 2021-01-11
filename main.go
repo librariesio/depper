@@ -14,9 +14,9 @@ import (
 )
 
 type Depper struct {
-	pipeline *publishers.Pipeline
-
-	signalHandler chan os.Signal
+	pipeline           *publishers.Pipeline
+	signalHandler      chan os.Signal
+	streamingIngestors []*ingestors.StreamingIngestor
 }
 
 func main() {
@@ -26,10 +26,9 @@ func main() {
 		pipeline:      createPipeline(),
 		signalHandler: make(chan os.Signal, 1),
 	}
-
 	depper.registerIngestors()
-	signal.Notify(depper.signalHandler, syscall.SIGINT, syscall.SIGTERM)
 
+	signal.Notify(depper.signalHandler, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-depper.signalHandler
 	signal.Stop(depper.signalHandler)
 	fmt.Printf("Caught signal: %s.\n", sig)
@@ -68,6 +67,8 @@ func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 }
 
 func (depper *Depper) registerIngestorStream(ingestor ingestors.StreamingIngestor) {
+	depper.streamingIngestors = append(depper.streamingIngestors, &ingestor)
+
 	// Unbuffered channel so that the StreamingIngestor will block while pulling
 	// next updates until Publish() has grabbed the last one.
 	packageVersions := make(chan data.PackageVersion)

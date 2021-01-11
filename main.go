@@ -7,15 +7,16 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/librariesio/depper/data"
 	"github.com/librariesio/depper/ingestors"
 	"github.com/librariesio/depper/publishers"
 	"github.com/robfig/cron/v3"
 )
 
 type Depper struct {
-	pipeline *publishers.Pipeline
-
-	signalHandler chan os.Signal
+	pipeline           *publishers.Pipeline
+	signalHandler      chan os.Signal
+	streamingIngestors []*ingestors.StreamingIngestor
 }
 
 func main() {
@@ -25,10 +26,9 @@ func main() {
 		pipeline:      createPipeline(),
 		signalHandler: make(chan os.Signal, 1),
 	}
-
 	depper.registerIngestors()
-	signal.Notify(depper.signalHandler, syscall.SIGINT, syscall.SIGTERM)
 
+	signal.Notify(depper.signalHandler, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-depper.signalHandler
 	signal.Stop(depper.signalHandler)
 	fmt.Printf("Caught signal: %s.\n", sig)
@@ -42,18 +42,19 @@ func createPipeline() *publishers.Pipeline {
 }
 
 func (depper *Depper) registerIngestors() {
-	depper.registerIngestor(&ingestors.RubyGems{})
+	depper.registerIngestor(ingestors.NewRubyGems())
+	depper.registerIngestorStream(ingestors.NewNPM())
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 	c := cron.New()
-	injestAndPublish := func() {
+	ingestAndPublish := func() {
 		for _, packageVersion := range ingestor.Ingest() {
 			depper.pipeline.Publish(packageVersion)
 		}
 	}
 
-	_, err := c.AddFunc(ingestor.Schedule(), injestAndPublish)
+	_, err := c.AddFunc(ingestor.Schedule(), ingestAndPublish)
 
 	if err != nil {
 		log.Fatalf("Error: %v", err)
@@ -62,5 +63,20 @@ func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 	c.Start()
 
 	// For now we'll run once upon registration
-	injestAndPublish()
+	ingestAndPublish()
+}
+
+func (depper *Depper) registerIngestorStream(ingestor ingestors.StreamingIngestor) {
+	depper.streamingIngestors = append(depper.streamingIngestors, &ingestor)
+
+	// Unbuffered channel so that the StreamingIngestor will block while pulling
+	// next updates until Publish() has grabbed the last one.
+	packageVersions := make(chan data.PackageVersion)
+
+	go ingestor.Ingest(packageVersions)
+	go func() {
+		for packageVersion := range packageVersions {
+			depper.pipeline.Publish(packageVersion)
+		}
+	}()
 }

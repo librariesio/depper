@@ -95,11 +95,18 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 				}
 			}
 		} else if changes.EOQ() {
-			fmt.Printf("EOQ. Retrying in 5 seconds.\n")
+			log.Printf("EOQ. Retrying in 5 seconds.\n")
 			time.Sleep(5 * time.Second)
 		} else {
-			fmt.Printf("Error: %s. Retrying in 5 seconds.\n", changes.Err())
+			// TODO this seems to just fail after error and keeps repeating. Reconnect db?
+			log.Printf("Error: %s. Reconnecting in 5 seconds.\n", changes.Err())
 			time.Sleep(5 * time.Second)
+			db := client.DB(NPMRegistryDatabase)
+			changes, err = db.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer changes.Close()
 		}
 	}
 }

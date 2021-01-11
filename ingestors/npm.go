@@ -119,7 +119,7 @@ func (ingestor *NPM) GetLatestSequence() (string, error) {
 
 func getRedisClient() *redis.Client {
 	address := "localhost:6379"
-	envVal, envFound := os.LookupEnv("REDIS_URL")
+	envVal, envFound := os.LookupEnv("REDISCLOUD_URL")
 	if envFound {
 		address = envVal
 	}

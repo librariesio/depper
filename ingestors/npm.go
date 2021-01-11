@@ -74,7 +74,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 			}
 			if latestVersion != "" {
 				results <- data.PackageVersion{
-					Platform:  "NPM",
+					Platform:  "npm",
 					Name:      doc.Name,
 					Version:   latestVersion,
 					CreatedAt: latestTime,

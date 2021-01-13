@@ -26,6 +26,7 @@ func (ingestor *Elm) Schedule() string {
 }
 
 func (ingestor *Elm) Ingest() []data.PackageVersion {
+	ingestor.LatestRun = time.Now()
 	return ingestor.ingestURL(ElmFeed)
 }
 

@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-const ElmSchedule = "0 */4 * * *"
-const ElmFeed = "https://elm-greenwood.com/.rss"
+const elmSchedule = "0 */4 * * *"
+const elmFeed = "https://elm-greenwood.com/.rss"
 
 type Elm struct {
 	LatestRun time.Time
@@ -22,12 +22,12 @@ func NewElm() *Elm {
 }
 
 func (ingestor *Elm) Schedule() string {
-	return ElmSchedule
+	return elmSchedule
 }
 
 func (ingestor *Elm) Ingest() []data.PackageVersion {
 	ingestor.LatestRun = time.Now()
-	return ingestor.ingestURL(ElmFeed)
+	return ingestor.ingestURL(elmFeed)
 }
 
 func (ingestor *Elm) ingestURL(feedUrl string) []data.PackageVersion {

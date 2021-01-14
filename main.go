@@ -87,7 +87,7 @@ func setupLogger() {
 		FullTimestamp: true,
 	})
 
-	// Send error-y logs to stderr
+	// Send error-y logs to stderr and info-y logs to stdout
 	log.SetOutput(ioutil.Discard)
 	log.AddHook(&writer.Hook{
 		Writer: os.Stderr,
@@ -98,7 +98,6 @@ func setupLogger() {
 			log.WarnLevel,
 		},
 	})
-	// Send info-y logs to stdout
 	log.AddHook(&writer.Hook{
 		Writer: os.Stdout,
 		LogLevels: []log.Level{

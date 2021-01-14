@@ -2,9 +2,10 @@ package ingestors
 
 import (
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/buger/jsonparser"
 	"github.com/librariesio/depper/data"
@@ -27,6 +28,7 @@ func (ingestor *RubyGems) Schedule() string {
 }
 
 func (ingestor *RubyGems) Ingest() []data.PackageVersion {
+	log.WithFields(log.Fields{"platform": "rubygems"}).Info("Depper ingest")
 	results := append(
 		ingestor.ingestURL(RubyGemsJustUpdatedURL),
 		ingestor.ingestURL(RubyGemsLatestURL)...,
@@ -42,7 +44,7 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 
 	response, err := http.Get(url)
 	if err != nil {
-		log.Print(err)
+		log.WithFields(log.Fields{"ingestor": "rubygems", "error": err}).Error()
 		return results
 	}
 
@@ -66,7 +68,7 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 	})
 
 	if err != nil {
-		log.Print(err)
+		log.WithFields(log.Fields{"ingestor": "rubygems", "error": err}).Error()
 	}
 
 	return results

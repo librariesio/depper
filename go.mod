@@ -9,4 +9,5 @@ require (
 	github.com/go-redis/redis/v8 v8.4.4
 	github.com/mmcdole/gofeed v1.1.0
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/sirupsen/logrus v1.7.0
 )

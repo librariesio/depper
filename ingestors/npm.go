@@ -3,9 +3,10 @@ package ingestors
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	kivik "github.com/go-kivik/kivik/v4"
 	"github.com/go-redis/redis/v8"
@@ -43,9 +44,9 @@ type NPMChangeDoc struct {
 func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	since, err := ingestor.GetLatestSequence()
 	if err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
-	log.Printf("Depper Ingestor platform=npm sequence=%s", since)
+	log.WithFields(log.Fields{"platform": "npm", "sequence": since}).Info("Depper ingest")
 
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
 	changes, err := couchDb.Changes(context.Background(), kivik.Options{
@@ -55,7 +56,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		"timeout":      60000 * 2,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
 	defer changes.Close()
 
@@ -63,7 +64,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		if changes.Next() {
 			var doc NPMChangeDoc
 			if err := changes.ScanDoc(&doc); err != nil {
-				log.Fatalf("Error parsing json doc at sequence %s with ID %s\n", changes.Seq(), changes.ID())
+				log.WithFields(log.Fields{"seq": changes.Seq(), "id": changes.ID()}).Fatal(err)
 			}
 			var latestVersion string
 			var latestTime time.Time
@@ -85,19 +86,19 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 					CreatedAt: latestTime,
 				}
 				if err := ingestor.SetLatestSequence(changes.Seq()); err != nil {
-					log.Fatalf(err.Error())
+					log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 				}
 			}
 		} else if changes.EOQ() {
-			log.Printf("EOQ. Retrying in 5 seconds.\n")
+			log.WithFields(log.Fields{"ingestor": "npm", "error": "EOQ"}).Error("Retrying in 5 seconds.")
 			time.Sleep(5 * time.Second)
 		} else {
-			log.Printf("Error: %s. Reconnecting in 5 seconds.\n", changes.Err())
+			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error("Reconnecting in 5 seconds.")
 			time.Sleep(5 * time.Second)
 			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
 			changes, err = couchDb.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
 			if err != nil {
-				log.Fatal(err)
+				log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 			}
 		}
 	}
@@ -138,7 +139,7 @@ func getRedisClient() *redis.Client {
 func getCouchClient() *kivik.Client {
 	kivikClient, err := kivik.New("couch", NPMRegistryHostname)
 	if err != nil {
-		log.Fatal(err)
+		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
 	return kivikClient
 }

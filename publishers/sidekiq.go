@@ -7,9 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/librariesio/depper/data"
@@ -57,7 +58,7 @@ func randomHex(n int) string {
 	id := make([]byte, n)
 	_, err := io.ReadFull(rand.Reader, id)
 	if err != nil {
-		log.Println("Error making random hex")
+		log.WithFields(log.Fields{"ingestor": "npm", "error": err})
 	}
 	return hex.EncodeToString(id)
 }
@@ -79,11 +80,10 @@ func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
 
 	wasSet, err := lib.RedisClient.SetNX(lib.Context, key, true, TTL).Result()
 	if err != nil {
-		log.Printf("Error trying to set key for redis %g", err)
+		log.WithFields(log.Fields{"publisher": "sidekiq"}).Error(err)
 		return
 	}
 	if wasSet {
-		log.Printf("Sidekiq Publisher %s", key)
 		lib.scheduleJob(packageVersion)
 	}
 }
@@ -92,7 +92,7 @@ func (lib *Sidekiq) scheduleJob(packageVersion data.PackageVersion) {
 	job := createSyncJob(packageVersion)
 	encoded, err := json.Marshal(job)
 	if err != nil {
-		log.Printf("Error encoding sync job for sidekiq %g", err)
+		log.WithFields(log.Fields{"publisher": "sidekiq"}).Error(err)
 		return
 	}
 	lib.RedisClient.LPush(lib.Context, fmt.Sprintf("queue:%s", job.Queue), string(encoded))

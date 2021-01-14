@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,6 +9,7 @@ import (
 	"github.com/librariesio/depper/ingestors"
 	"github.com/librariesio/depper/publishers"
 	"github.com/robfig/cron/v3"
+	log "github.com/sirupsen/logrus"
 )
 
 type Depper struct {
@@ -20,10 +19,8 @@ type Depper struct {
 }
 
 func main() {
-	fmt.Println("Starting Depper...")
-
-	log.SetOutput(os.Stdout)
-
+	setupLogger()
+	log.Info("Starting Depper")
 	depper := &Depper{
 		pipeline:      createPipeline(),
 		signalHandler: make(chan os.Signal, 1),
@@ -33,7 +30,7 @@ func main() {
 	signal.Notify(depper.signalHandler, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-depper.signalHandler
 	signal.Stop(depper.signalHandler)
-	fmt.Printf("Caught signal: %s.\n", sig)
+	log.WithFields(log.Fields{"signal": sig}).Info("Exiting")
 }
 
 func createPipeline() *publishers.Pipeline {
@@ -57,9 +54,8 @@ func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 	}
 
 	_, err := c.AddFunc(ingestor.Schedule(), ingestAndPublish)
-
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatal(err)
 	}
 
 	c.Start()
@@ -81,4 +77,16 @@ func (depper *Depper) registerIngestorStream(ingestor ingestors.StreamingIngesto
 			depper.pipeline.Publish(packageVersion)
 		}
 	}()
+}
+
+func setupLogger() {
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+
+	if os.Getenv("DEBUG") == "1" {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
 }

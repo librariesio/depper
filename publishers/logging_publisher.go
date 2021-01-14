@@ -1,7 +1,7 @@
 package publishers
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/librariesio/depper/data"
 )
@@ -9,8 +9,11 @@ import (
 type LoggingPublisher struct{}
 
 func (publisher *LoggingPublisher) Publish(packageVersion data.PackageVersion) {
-	log.Printf("Depper Publishing platform=%s name=%s version=%s",
-		packageVersion.Platform,
-		packageVersion.Name,
-		packageVersion.Version)
+	log.
+		WithFields(log.Fields{
+			"platform": packageVersion.Platform,
+			"name":     packageVersion.Name,
+			"version":  packageVersion.Version,
+		}).
+		Info("Depper publish")
 }

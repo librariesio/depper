@@ -10,6 +10,7 @@ import (
 	"github.com/librariesio/depper/publishers"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus/hooks/writer"
 )
 
 type Depper struct {
@@ -83,6 +84,23 @@ func (depper *Depper) registerIngestorStream(ingestor ingestors.StreamingIngesto
 func setupLogger() {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
+	})
+
+	log.AddHook(&writer.Hook{
+		Writer: os.Stderr,
+		LogLevels: []log.Level{
+			log.PanicLevel,
+			log.FatalLevel,
+			log.ErrorLevel,
+			log.WarnLevel,
+		},
+	})
+	log.AddHook(&writer.Hook{
+		Writer: os.Stdout,
+		LogLevels: []log.Level{
+			log.InfoLevel,
+			log.DebugLevel,
+		},
 	})
 
 	if os.Getenv("DEBUG") == "1" {

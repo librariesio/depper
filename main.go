@@ -86,7 +86,7 @@ func setupLogger() {
 		FullTimestamp: true,
 	})
 
-	log.AddHook(&writer.Hook{ /
+	log.AddHook(&writer.Hook{
 		Writer: os.Stderr,
 		LogLevels: []log.Level{
 			log.PanicLevel,

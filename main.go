@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -85,6 +86,8 @@ func setupLogger() {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})
+
+	log.SetOutput(ioutil.Discard) // Send all logs to nowhere by default
 
 	log.AddHook(&writer.Hook{
 		Writer: os.Stderr,

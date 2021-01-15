@@ -46,7 +46,6 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
-	log.WithFields(log.Fields{"platform": "npm", "sequence": since}).Info("Depper ingest")
 
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
 	changes, err := couchDb.Changes(context.Background(), kivik.Options{

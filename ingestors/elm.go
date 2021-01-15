@@ -2,12 +2,14 @@ package ingestors
 
 import (
 	"fmt"
-	"github.com/librariesio/depper/data"
-	"github.com/mmcdole/gofeed"
-	"log"
 	"net/url"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/librariesio/depper/data"
+	"github.com/mmcdole/gofeed"
 )
 
 const elmSchedule = "0 */4 * * *"
@@ -39,7 +41,7 @@ func (ingestor *Elm) ingestURL(feedUrl string) []data.PackageVersion {
 	feed, err := fp.ParseURL(feedUrl)
 
 	if err != nil {
-		log.Print(err)
+		log.WithFields(log.Fields{"ingestor": "elm"}).Error(err)
 		return results
 	}
 	for _, item := range feed.Items {

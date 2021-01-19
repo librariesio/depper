@@ -13,7 +13,6 @@ import (
 
 	"github.com/librariesio/depper/data"
 	"github.com/librariesio/depper/redis"
-	_ "github.com/librariesio/depper/redis"
 )
 
 const TTL = 24 * time.Hour

@@ -7,20 +7,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/librariesio/depper/data"
+	"github.com/librariesio/depper/redis"
+	_ "github.com/librariesio/depper/redis"
 )
 
 const TTL = 24 * time.Hour
 
 type Sidekiq struct {
-	RedisClient *redis.Client
-	Context     context.Context
+	Context context.Context
 }
 
 type LibrariesJob struct {
@@ -34,20 +33,8 @@ type LibrariesJob struct {
 }
 
 func NewSidekiq() *Sidekiq {
-	address := "localhost:6379"
-	envVal, envFound := os.LookupEnv("REDISCLOUD_URL")
-	if envFound {
-		address = envVal
-	}
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     address,
-		Password: "",
-		DB:       0,
-	})
-
 	return &Sidekiq{
-		RedisClient: rdb,
-		Context:     context.Background(),
+		Context: context.Background(),
 	}
 }
 func getKey(packageVersion data.PackageVersion) string {
@@ -78,7 +65,7 @@ func createSyncJob(packageVersion data.PackageVersion) *LibrariesJob {
 func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
 	key := getKey(packageVersion)
 
-	wasSet, err := lib.RedisClient.SetNX(lib.Context, key, true, TTL).Result()
+	wasSet, err := redis.Client.SetNX(lib.Context, key, true, TTL).Result()
 	if err != nil {
 		log.WithFields(log.Fields{"publisher": "sidekiq"}).Error(err)
 		return
@@ -95,5 +82,5 @@ func (lib *Sidekiq) scheduleJob(packageVersion data.PackageVersion) {
 		log.WithFields(log.Fields{"publisher": "sidekiq"}).Error(err)
 		return
 	}
-	lib.RedisClient.LPush(lib.Context, fmt.Sprintf("queue:%s", job.Queue), string(encoded))
+	redis.Client.LPush(lib.Context, fmt.Sprintf("queue:%s", job.Queue), string(encoded))
 }

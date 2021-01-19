@@ -3,16 +3,15 @@ package ingestors
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	kivik "github.com/go-kivik/kivik/v4"
-	"github.com/go-redis/redis/v8"
 
 	_ "github.com/go-kivik/couchdb/v4"
 	"github.com/librariesio/depper/data"
+	"github.com/librariesio/depper/redis"
 )
 
 const NPMRegistryHostname = "https://replicate.npmjs.com"
@@ -21,14 +20,10 @@ const NPMLatestSequenceRedisKey = "npm:updates:latest_sequence"
 
 type NPM struct {
 	couchClient *kivik.Client
-	redisClient *redis.Client
 }
 
 func NewNPM() *NPM {
-	couchClient := getCouchClient()
-	rdb := getRedisClient()
-
-	return &NPM{couchClient, rdb}
+	return &NPM{couchClient: getCouchClient()}
 }
 
 type NPMChangeDoc struct {
@@ -104,15 +99,15 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 }
 
 func (ingestor *NPM) SetLatestSequence(seq string) error {
-	err := ingestor.redisClient.Set(context.Background(), NPMLatestSequenceRedisKey, seq, 0).Err()
+	err := redis.Client.Set(context.Background(), NPMLatestSequenceRedisKey, seq, 0).Err()
 	if err != nil {
 		return fmt.Errorf("Error trying to set key %s for redis: %s", seq, err)
 	}
 	return nil
 }
 
-func (ingestor *NPM) GetLatestSequence() (string, error) {
-	val, err := ingestor.redisClient.Get(context.Background(), NPMLatestSequenceRedisKey).Result()
+func (ingestorr *NPM) GetLatestSequence() (string, error) {
+	val, err := redis.Client.Get(context.Background(), NPMLatestSequenceRedisKey).Result()
 	if err == redis.Nil {
 		return "now", nil
 	} else if err != nil {
@@ -120,19 +115,6 @@ func (ingestor *NPM) GetLatestSequence() (string, error) {
 	} else {
 		return val, nil
 	}
-}
-
-func getRedisClient() *redis.Client {
-	address := "localhost:6379"
-	envVal, envFound := os.LookupEnv("REDISCLOUD_URL")
-	if envFound {
-		address = envVal
-	}
-	return redis.NewClient(&redis.Options{
-		Addr:     address,
-		Password: "",
-		DB:       0,
-	})
 }
 
 func getCouchClient() *kivik.Client {

@@ -106,7 +106,7 @@ func (ingestor *NPM) SetLatestSequence(seq string) error {
 	return nil
 }
 
-func (ingestorr *NPM) GetLatestSequence() (string, error) {
+func (ingestor *NPM) GetLatestSequence() (string, error) {
 	val, err := redis.Client.Get(context.Background(), NPMLatestSequenceRedisKey).Result()
 	if err == redis.Nil {
 		return "now", nil

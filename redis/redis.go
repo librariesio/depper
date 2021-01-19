@@ -2,8 +2,9 @@ package redis
 
 import (
 	"context"
-	"log"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	redis "github.com/go-redis/redis/v8"
 )

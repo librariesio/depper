@@ -12,7 +12,7 @@ var Client *redis.Client
 var Nil = redis.Nil
 
 func init() {
-	address := "localhost:6378"
+	address := "localhost:6379"
 	if envVal, envFound := os.LookupEnv("REDISCLOUD_URL"); envFound {
 		address = envVal
 	}

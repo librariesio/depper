@@ -13,7 +13,7 @@ import (
 	"github.com/librariesio/depper/data"
 )
 
-const golangSchedule = "15 */6 * * *"
+const golangSchedule = "2-59/5 * * * *"
 const golangIndexUrl = "https://index.golang.org/index"
 
 type Golang struct {
@@ -32,7 +32,6 @@ func (ingestor *Golang) Ingest() []data.PackageVersion {
 	// Currently the index only shows the last <=2000 package version releases from the date given. (https://proxy.golang.org/)
 	oneDayAgo := url.QueryEscape(time.Now().AddDate(0, 0, -1).Format(time.RFC3339))
 	url := fmt.Sprintf("%s?since=%s&limit=2000", golangIndexUrl, oneDayAgo)
-
 
 	var results []data.PackageVersion
 

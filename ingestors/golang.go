@@ -33,7 +33,6 @@ func (ingestor *Golang) Ingest() []data.PackageVersion {
 	oneDayAgo := url.QueryEscape(time.Now().AddDate(0, 0, -1).Format(time.RFC3339))
 	url := fmt.Sprintf("%s?since=%s&limit=2000", golangIndexUrl, oneDayAgo)
 
-	fmt.Println(url)
 
 	var results []data.PackageVersion
 

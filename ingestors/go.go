@@ -13,31 +13,31 @@ import (
 	"github.com/librariesio/depper/data"
 )
 
-const golangSchedule = "2-59/5 * * * *"
-const golangIndexUrl = "https://index.golang.org/index"
+const goSchedule = "2-59/5 * * * *"
+const goIndexUrl = "https://index.golang.org/index"
 
-type Golang struct {
+type Go struct {
 	LatestRun time.Time
 }
 
-func NewGolang() *Golang {
-	return &Golang{}
+func NewGo() *Go {
+	return &Go{}
 }
 
-func (ingestor *Golang) Schedule() string {
-	return golangSchedule
+func (ingestor *Go) Schedule() string {
+	return goSchedule
 }
 
-func (ingestor *Golang) Ingest() []data.PackageVersion {
+func (ingestor *Go) Ingest() []data.PackageVersion {
 	// Currently the index only shows the last <=2000 package version releases from the date given. (https://proxy.golang.org/)
 	oneDayAgo := url.QueryEscape(time.Now().AddDate(0, 0, -1).Format(time.RFC3339))
-	url := fmt.Sprintf("%s?since=%s&limit=2000", golangIndexUrl, oneDayAgo)
+	url := fmt.Sprintf("%s?since=%s&limit=2000", goIndexUrl, oneDayAgo)
 
 	var results []data.PackageVersion
 
 	response, err := http.Get(url)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "golang", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": "go", "error": err}).Error()
 		return results
 	}
 
@@ -52,14 +52,14 @@ func (ingestor *Golang) Ingest() []data.PackageVersion {
 
 		results = append(results,
 			data.PackageVersion{
-				Platform:  "golang",
+				Platform:  "go",
 				Name:      name,
 				Version:   version,
 				CreatedAt: createdAtTime,
 			})
 	}
 	if err := scanner.Err(); err != nil {
-		log.WithFields(log.Fields{"ingestor": "golang", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": "go", "error": err}).Error()
 	}
 
 	ingestor.LatestRun = time.Now()

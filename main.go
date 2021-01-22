@@ -46,7 +46,7 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewRubyGems())
 	depper.registerIngestorStream(ingestors.NewNPM())
 	depper.registerIngestor(ingestors.NewElm())
-	depper.registerIngestor(ingestors.NewGolang())
+	depper.registerIngestor(ingestors.NewGo())
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {

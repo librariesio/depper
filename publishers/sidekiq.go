@@ -57,7 +57,7 @@ func createSyncJob(packageVersion data.PackageVersion) *LibrariesJob {
 		JID:        randomHex(12),
 		EnqueuedAt: time.Now().Unix(),
 		CreatedAt:  time.Now().Unix(),
-		Args:       []string{packageVersion.Platform, packageVersion.Name},
+		Args:       []string{packageVersion.Platform, packageVersion.Name, packageVersion.Version},
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/librariesio/depper/data"
 	"github.com/librariesio/depper/ingestors"
+	"github.com/librariesio/depper/ingestors/maven"
 	"github.com/librariesio/depper/publishers"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
@@ -47,6 +48,7 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestorStream(ingestors.NewNPM())
 	depper.registerIngestor(ingestors.NewElm())
 	depper.registerIngestor(ingestors.NewGo())
+	depper.registerIngestor(maven.NewMavenCentral())
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {

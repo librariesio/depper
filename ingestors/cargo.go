@@ -23,7 +23,7 @@ func NewCargo() *Cargo {
 }
 
 func (ingestor *Cargo) Schedule() string {
-	return elmSchedule
+	return cargoSchedule
 }
 
 func (ingestor *Cargo) Ingest() []data.PackageVersion {

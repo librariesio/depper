@@ -37,7 +37,10 @@ func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 
 	body, _ := ioutil.ReadAll(response.Body)
 	var mavens []mavenUpdate
-	json.Unmarshal(body, &mavens)
+	err := json.Unmarshal(body, &mavens)
+	if err != nil {
+		return results, err
+	}
 
 	for _, maven := range mavens {
 		results = append(results,

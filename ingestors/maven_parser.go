@@ -1,4 +1,4 @@
-package maven
+package ingestors
 
 import (
 	"encoding/json"
@@ -37,7 +37,7 @@ func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 
 	body, _ := ioutil.ReadAll(response.Body)
 	var mavens []mavenUpdate
-	err := json.Unmarshal(body, &mavens)
+	err = json.Unmarshal(body, &mavens)
 	if err != nil {
 		return results, err
 	}

@@ -1,4 +1,4 @@
-package maven
+package ingestors
 
 import (
 	"github.com/librariesio/depper/data"

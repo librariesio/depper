@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const mavenCentralSchedule = "1 1 * * MON,THU"
+const mavenCentralSchedule = "@every 12h"
 
 const mavenCentralUrl = "https://maven.libraries.io/mavenCentral/recent"
 

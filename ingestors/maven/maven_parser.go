@@ -13,8 +13,10 @@ type MavenParser struct {
 	Platform string
 }
 type mavenUpdate struct {
-	Name    string
-	Version string
+	Name         string
+	Version      string
+	LastModified int64
+	Size         int64
 }
 
 func NewMavenParser(url string, platform string) *MavenParser {
@@ -43,7 +45,7 @@ func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 				Platform:  parser.Platform,
 				Name:      maven.Name,
 				Version:   maven.Version,
-				CreatedAt: time.Now(),
+				CreatedAt: time.Unix(0, maven.LastModified*int64(time.Millisecond)),
 			})
 	}
 

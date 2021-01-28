@@ -11,7 +11,7 @@ import (
 	"github.com/librariesio/depper/data"
 )
 
-const nugetSchedule = "18 * * * *"
+const nugetSchedule = "*/5 * * * *"
 const nugetIndexUrl = "https://api.nuget.org/v3/catalog0/index.json"
 
 type nugetIndex struct {

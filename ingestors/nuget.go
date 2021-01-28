@@ -2,7 +2,6 @@ package ingestors
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -17,25 +16,23 @@ const nugetIndexUrl = "https://api.nuget.org/v3/catalog0/index.json"
 
 type nugetIndex struct {
 	IndexId string `json:"@id"`
-	Items   []struct {
+	Pages   []struct {
 		Url             string `json:"@id"`
-		Type            string `json:"@type"`
-		CommitId        string `json:"commitId"`
 		CommitTimeStamp string `json:"commitTimeStamp"`
 		CommitTime      time.Time
-	}
+	} `json:"items"`
 }
 
 type nugetPage struct {
-	PageId string `json:"@id"`
-	Items  []struct {
+	PageId   string `json:"@id"`
+	Packages []struct {
 		Url             string `json:"@id"`
 		Type            string `json:"@type"`
 		CommitTimeStamp string `json:"commitTimeStamp"`
 		CommitTime      time.Time
-		NugetId         string `json:"nuget:id"`
-		NugetVersion    string `json:"nuget:version"`
-	}
+		Name            string `json:"nuget:id"`
+		Version         string `json:"nuget:version"`
+	} `json:"items"`
 }
 
 type Nuget struct {
@@ -51,7 +48,10 @@ func (ingestor *Nuget) Schedule() string {
 }
 
 func (ingestor *Nuget) Ingest() []data.PackageVersion {
-	ingestor.LatestRun = time.Now().Add(-48 * time.Hour)
+	// Until we save LatestRun state, begin with the last 24 hours.
+	if ingestor.LatestRun.IsZero() {
+		ingestor.LatestRun = time.Now().Add(-24 * time.Hour)
+	}
 	packages := ingestor.ingestURL(nugetIndexUrl)
 	ingestor.LatestRun = time.Now()
 	return packages
@@ -81,11 +81,10 @@ func (ingestor *Nuget) getIndex(url string) ([]data.PackageVersion, error) {
 	var index nugetIndex
 	json.Unmarshal(body, &index)
 
-	for i, item := range index.Items {
-		item.CommitTime, _ = time.Parse(time.RFC3339, item.CommitTimeStamp)
-		if item.CommitTime.After(ingestor.LatestRun) {
-			fmt.Printf("Page %d - %s - %s\n", i, item.Url, item.Type)
-			pageResults, err := ingestor.getPage(item.Url)
+	for _, page := range index.Pages {
+		page.CommitTime, _ = time.Parse(time.RFC3339, page.CommitTimeStamp)
+		if page.CommitTime.After(ingestor.LatestRun) {
+			pageResults, err := ingestor.getPage(page.Url)
 			if err != nil {
 				return results, nil
 			}
@@ -97,7 +96,6 @@ func (ingestor *Nuget) getIndex(url string) ([]data.PackageVersion, error) {
 }
 
 func (ingestor *Nuget) getPage(url string) ([]data.PackageVersion, error) {
-	fmt.Printf("Getting page %s\n", url)
 	var results []data.PackageVersion
 
 	response, err := http.Get(url)
@@ -109,20 +107,19 @@ func (ingestor *Nuget) getPage(url string) ([]data.PackageVersion, error) {
 	body, _ := ioutil.ReadAll(response.Body)
 	var page nugetPage
 	json.Unmarshal(body, &page)
-	fmt.Printf("Page %s %d\n", page.PageId, len(page.Items))
 
-	for _, item := range page.Items {
-		item.CommitTime, _ = time.Parse(time.RFC3339, item.CommitTimeStamp)
-		if item.CommitTime.After(ingestor.LatestRun) {
-			results = append(results,
+	for _, pkg := range page.Packages {
+		pkg.CommitTime, _ = time.Parse(time.RFC3339, pkg.CommitTimeStamp)
+		if pkg.CommitTime.After(ingestor.LatestRun) {
+			results = append(
+				results,
 				data.PackageVersion{
 					Platform:  "nuget",
-					Name:      item.NugetId,
-					Version:   item.NugetVersion,
-					CreatedAt: item.CommitTime,
-				})
-		} else {
-			fmt.Printf("Skipping %s\n", item)
+					Name:      pkg.Name,
+					Version:   pkg.Version,
+					CreatedAt: pkg.CommitTime,
+				},
+			)
 		}
 	}
 

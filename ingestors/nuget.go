@@ -27,7 +27,6 @@ type nugetPage struct {
 	PageId   string `json:"@id"`
 	Packages []struct {
 		Url             string `json:"@id"`
-		Type            string `json:"@type"`
 		CommitTimeStamp string `json:"commitTimeStamp"`
 		CommitTime      time.Time
 		Name            string `json:"nuget:id"`

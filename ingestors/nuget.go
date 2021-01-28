@@ -47,9 +47,9 @@ func (ingestor *Nuget) Schedule() string {
 }
 
 func (ingestor *Nuget) Ingest() []data.PackageVersion {
-	// Until we save LatestRun state, go back to a 4x multiple of the frequency: 20 min.
+	// Until we save LatestRun state, go back two hours by default.
 	if ingestor.LatestRun.IsZero() {
-		ingestor.LatestRun = time.Now().Add(-20 * time.Minute)
+		ingestor.LatestRun = time.Now().Add(-120 * time.Minute)
 	}
 	packages := ingestor.ingestURL(nugetIndexUrl)
 	ingestor.LatestRun = time.Now()

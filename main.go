@@ -47,7 +47,7 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestorStream(ingestors.NewNPM())
 	depper.registerIngestor(ingestors.NewElm())
 	depper.registerIngestor(ingestors.NewGo())
-	depper.registerIngestor(ingestors.NewMavenCentral())
+	// depper.registerIngestor(ingestors.NewMavenCentral())
 	depper.registerIngestor(ingestors.NewCargo())
 }
 

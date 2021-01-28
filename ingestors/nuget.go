@@ -77,9 +77,12 @@ func (ingestor *Nuget) getIndex(url string) ([]data.PackageVersion, error) {
 	}
 	defer response.Body.Close()
 
-	body, _ := ioutil.ReadAll(response.Body)
 	var index nugetIndex
-	json.Unmarshal(body, &index)
+	body, _ := ioutil.ReadAll(response.Body)
+	err = json.Unmarshal(body, &index)
+	if err != nil {
+		return results, err
+	}
 
 	for _, page := range index.Pages {
 		page.CommitTime, _ = time.Parse(time.RFC3339, page.CommitTimeStamp)
@@ -106,7 +109,10 @@ func (ingestor *Nuget) getPage(url string) ([]data.PackageVersion, error) {
 
 	body, _ := ioutil.ReadAll(response.Body)
 	var page nugetPage
-	json.Unmarshal(body, &page)
+	err = json.Unmarshal(body, &page)
+	if err != nil {
+		return results, err
+	}
 
 	for _, pkg := range page.Packages {
 		pkg.CommitTime, _ = time.Parse(time.RFC3339, pkg.CommitTimeStamp)

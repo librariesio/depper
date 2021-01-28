@@ -1,21 +1,20 @@
 package publishers
 
 import (
+	"context"
 	"time"
 
 	"github.com/librariesio/depper/data"
+	"github.com/librariesio/depper/redis"
+	log "github.com/sirupsen/logrus"
 )
 
 const maxQueueSize = 1000
 
-type Publisher interface {
-	Publish(data.PackageVersion)
-}
-
 type Pipeline struct {
 	publishers      []Publisher
 	LastPublishedAt time.Time
-	queue           chan data.PackageVersion
+	queue           chan publishing
 }
 
 func NewPipeline() *Pipeline {
@@ -25,24 +24,38 @@ func NewPipeline() *Pipeline {
 	return pipeline
 }
 
-func (pipeline *Pipeline) Publish(packageVersion data.PackageVersion) {
-	pipeline.queue <- packageVersion
+func (pipeline *Pipeline) Publish(ttl time.Duration, packageVersion data.PackageVersion) {
+	pipeline.queue <- publishing{PackageVersion: packageVersion, ttl: ttl}
 }
 
 func (pipeline *Pipeline) run() {
-	pipeline.queue = make(chan data.PackageVersion, maxQueueSize)
+	pipeline.queue = make(chan publishing, maxQueueSize)
 
-	for packageVersion := range pipeline.queue {
-		pipeline.process(packageVersion)
+	for publishing := range pipeline.queue {
+		pipeline.process(publishing)
 	}
 }
 
-func (pipeline *Pipeline) process(packageVersion data.PackageVersion) {
-	// TODO move deduping code here
+func (pipeline *Pipeline) process(publishing publishing) {
+	if !pipeline.shouldPublish(publishing) {
+		return
+	}
+
 	for _, publisher := range pipeline.publishers {
 		// Publish each packageversion to all publishers
-		publisher.Publish(packageVersion)
+		publisher.Publish(publishing.PackageVersion)
 	}
+}
+
+func (pipeline *Pipeline) shouldPublish(publishing publishing) bool {
+	wasSet, err := redis.Client.SetNX(context.Background(), publishing.Key(), true, publishing.ttl).Result()
+
+	if err != nil {
+		log.WithFields(log.Fields{"publisher": "pipeline"}).Error(err)
+		return false
+	}
+
+	return wasSet
 }
 
 // Registers a publisher on the pipeline

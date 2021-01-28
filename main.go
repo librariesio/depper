@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/librariesio/depper/data"
 	"github.com/librariesio/depper/ingestors"
@@ -13,6 +14,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 )
+
+const defaultTTL = 24 * time.Hour
 
 type Depper struct {
 	pipeline           *publishers.Pipeline
@@ -47,7 +50,7 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestorStream(ingestors.NewNPM())
 	depper.registerIngestor(ingestors.NewElm())
 	depper.registerIngestor(ingestors.NewGo())
-	// depper.registerIngestor(ingestors.NewMavenCentral())
+	depper.registerIngestor(ingestors.NewMavenCentral())
 	depper.registerIngestor(ingestors.NewCargo())
 	depper.registerIngestor(ingestors.NewNuget())
 }
@@ -55,8 +58,14 @@ func (depper *Depper) registerIngestors() {
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 	c := cron.New()
 	ingestAndPublish := func() {
+		ttl := defaultTTL
+
+		if ttler, ok := ingestor.(ingestors.TTLer); ok {
+			ttl = ttler.TTL()
+		}
+
 		for _, packageVersion := range ingestor.Ingest() {
-			depper.pipeline.Publish(packageVersion)
+			depper.pipeline.Publish(ttl, packageVersion)
 		}
 	}
 
@@ -81,7 +90,7 @@ func (depper *Depper) registerIngestorStream(ingestor ingestors.StreamingIngesto
 	go ingestor.Ingest(packageVersions)
 	go func() {
 		for packageVersion := range packageVersions {
-			depper.pipeline.Publish(packageVersion)
+			depper.pipeline.Publish(defaultTTL, packageVersion)
 		}
 	}()
 }

@@ -26,10 +26,6 @@ func (ingestor *Packagist) Schedule() string {
 }
 
 func (ingestor *Packagist) Ingest() []data.PackageVersion {
-	// Until we save LatestRun state, go back two hours by default.
-	if ingestor.LatestRun.IsZero() {
-		ingestor.LatestRun = time.Now().Add(-120 * time.Minute)
-	}
 	packages := ingestor.ingestURL(packagistReleasesUrl)
 	ingestor.LatestRun = time.Now()
 	return packages

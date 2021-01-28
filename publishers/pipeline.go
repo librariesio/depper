@@ -37,11 +37,13 @@ func (pipeline *Pipeline) run() {
 }
 
 func (pipeline *Pipeline) process(publishing publishing) {
-	if pipeline.shouldPublish(publishing) {
-		for _, publisher := range pipeline.publishers {
-			// Publish each packageversion to all publishers
-			publisher.Publish(publishing.PackageVersion)
-		}
+	if !pipeline.shouldPublish(publishing) {
+		return
+	}
+
+	for _, publisher := range pipeline.publishers {
+		// Publish each packageversion to all publishers
+		publisher.Publish(publishing.PackageVersion)
 	}
 }
 

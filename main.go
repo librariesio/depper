@@ -60,7 +60,7 @@ func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 		ttl := defaultTTL
 
 		if ttler, ok := ingestor.(ingestors.TTLer); ok {
-			ttl = ttler.TTLHours()
+			ttl = ttler.TTL()
 		}
 
 		for _, packageVersion := range ingestor.Ingest() {

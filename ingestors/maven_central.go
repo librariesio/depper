@@ -8,7 +8,7 @@ import (
 )
 
 const mavenCentralSchedule = "@every 12h"
-const ttlHours = 168 * time.Hour // 1 Week
+const ttl = 168 * time.Hour // 1 Week
 
 const mavenCentralUrl = "https://maven.libraries.io/mavenCentral/recent"
 
@@ -24,8 +24,8 @@ func (ingestor *MavenCentral) Schedule() string {
 	return mavenCentralSchedule
 }
 
-func (ingestor *MavenCentral) TTLHours() time.Duration {
-	return ttlHours
+func (ingestor *MavenCentral) TTL() time.Duration {
+	return ttl
 }
 
 func (ingestor *MavenCentral) Ingest() []data.PackageVersion {

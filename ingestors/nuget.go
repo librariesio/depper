@@ -13,6 +13,7 @@ import (
 
 const nugetSchedule = "*/5 * * * *"
 const nugetIndexUrl = "https://api.nuget.org/v3/catalog0/index.json"
+const defaultLatestRun = -120 * time.Minute
 
 type nugetIndex struct {
 	IndexId string `json:"@id"`
@@ -47,9 +48,9 @@ func (ingestor *Nuget) Schedule() string {
 }
 
 func (ingestor *Nuget) Ingest() []data.PackageVersion {
-	// Until we save LatestRun state, go back two hours by default.
+	// Until we save LatestRun state, we need to set a LatestRun to avoid scanning every single release in the index.
 	if ingestor.LatestRun.IsZero() {
-		ingestor.LatestRun = time.Now().Add(-120 * time.Minute)
+		ingestor.LatestRun = time.Now().Add(defaultLatestRun)
 	}
 	packages := ingestor.ingestURL(nugetIndexUrl)
 	ingestor.LatestRun = time.Now()

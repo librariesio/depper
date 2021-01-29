@@ -43,16 +43,14 @@ func (ingestor *Packagist) ingestURL(feedUrl string) []data.PackageVersion {
 	}
 
 	for _, item := range feed.Items {
-		if item.PublishedParsed.After(ingestor.LatestRun) {
-			nameAndVersion := strings.SplitN(item.GUID, " ", 2)
-			results = append(results,
-				data.PackageVersion{
-					Platform:  "packagist",
-					Name:      nameAndVersion[0],
-					Version:   nameAndVersion[1],
-					CreatedAt: *item.PublishedParsed,
-				})
-		}
+		nameAndVersion := strings.SplitN(item.GUID, " ", 2)
+		results = append(results,
+			data.PackageVersion{
+				Platform:  "packagist",
+				Name:      nameAndVersion[0],
+				Version:   nameAndVersion[1],
+				CreatedAt: *item.PublishedParsed,
+			})
 	}
 
 	return results

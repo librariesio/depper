@@ -15,11 +15,7 @@ import (
 	"github.com/librariesio/depper/redis"
 )
 
-const TTL = 24 * time.Hour
-
-type Sidekiq struct {
-	Context context.Context
-}
+type Sidekiq struct{}
 
 type LibrariesJob struct {
 	Class      string   `json:"class"`
@@ -32,12 +28,7 @@ type LibrariesJob struct {
 }
 
 func NewSidekiq() *Sidekiq {
-	return &Sidekiq{
-		Context: context.Background(),
-	}
-}
-func getKey(packageVersion data.PackageVersion) string {
-	return fmt.Sprintf("depper:ingest:%s:%s:%s", packageVersion.Platform, packageVersion.Name, packageVersion.Version)
+	return &Sidekiq{}
 }
 
 func randomHex(n int) string {
@@ -62,24 +53,11 @@ func createSyncJob(packageVersion data.PackageVersion) *LibrariesJob {
 }
 
 func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
-	key := getKey(packageVersion)
-
-	wasSet, err := redis.Client.SetNX(lib.Context, key, true, TTL).Result()
-	if err != nil {
-		log.WithFields(log.Fields{"publisher": "sidekiq"}).Error(err)
-		return
-	}
-	if wasSet {
-		lib.scheduleJob(packageVersion)
-	}
-}
-
-func (lib *Sidekiq) scheduleJob(packageVersion data.PackageVersion) {
 	job := createSyncJob(packageVersion)
 	encoded, err := json.Marshal(job)
 	if err != nil {
 		log.WithFields(log.Fields{"publisher": "sidekiq"}).Error(err)
 		return
 	}
-	redis.Client.LPush(lib.Context, fmt.Sprintf("queue:%s", job.Queue), string(encoded))
+	redis.Client.LPush(context.Background(), fmt.Sprintf("queue:%s", job.Queue), string(encoded))
 }

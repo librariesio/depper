@@ -1,12 +1,14 @@
 package ingestors
 
 import (
+	"time"
+
 	"github.com/librariesio/depper/data"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 const mavenCentralSchedule = "@every 12h"
+const ttl = 168 * time.Hour // 1 Week
 
 const mavenCentralUrl = "https://maven.libraries.io/mavenCentral/recent"
 
@@ -20,6 +22,10 @@ func NewMavenCentral() *MavenCentral {
 
 func (ingestor *MavenCentral) Schedule() string {
 	return mavenCentralSchedule
+}
+
+func (ingestor *MavenCentral) TTL() time.Duration {
+	return ttl
 }
 
 func (ingestor *MavenCentral) Ingest() []data.PackageVersion {

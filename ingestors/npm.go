@@ -40,12 +40,12 @@ func (ingestor *NPM) Name() string {
 }
 
 func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
-	since, err := getBookmark(ingestor, "now")
+	since, err := getBookmark(ingestor, nil)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
 
-	// TODO: This is a migration for bookmarks, can delete after first deployment
+	// TODO: This is a migration for bookmarks, can delete after first deployment, change default above to "now"
 	if since == nil {
 		since, _ = redis.Client.Get(context.Background(), "npm:updates:latest_sequence").Result()
 	}

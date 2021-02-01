@@ -15,7 +15,6 @@ import (
 
 const NPMRegistryHostname = "https://replicate.npmjs.com"
 const NPMRegistryDatabase = "registry"
-const latestSequenceBookmark = "npm:updates:latest_sequence"
 
 type NPM struct {
 	couchClient *kivik.Client

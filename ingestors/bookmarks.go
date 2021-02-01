@@ -9,9 +9,11 @@ import (
 
 // Use to set a date/string bookmark for an ingestor
 func setBookmark(namer Namer, bookmark interface{}) (interface{}, error) {
-	err := redis.Client.Set(context.Background(), bookmarkKey(namer), bookmark, 0).Err()
+	key := bookmarkKey(namer)
+
+	err := redis.Client.Set(context.Background(), key, bookmark, 0).Err()
 	if err != nil {
-		return bookmark, fmt.Errorf("Error trying to set %s bookmark to %v - %s", bookmark, err)
+		return bookmark, fmt.Errorf("Error trying to set %s bookmark to %v - %s", key, bookmark, err)
 	}
 
 	return bookmark, nil

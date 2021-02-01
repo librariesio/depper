@@ -2,7 +2,6 @@ package ingestors
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -16,7 +15,7 @@ import (
 
 const NPMRegistryHostname = "https://replicate.npmjs.com"
 const NPMRegistryDatabase = "registry"
-const NPMLatestSequenceRedisKey = "npm:updates:latest_sequence"
+const latestSequenceBookmark = "npm:updates:latest_sequence"
 
 type NPM struct {
 	couchClient *kivik.Client
@@ -36,10 +35,19 @@ type NPMChangeDoc struct {
 	Time map[string]string `json:"time"`
 }
 
+func (ingestor *NPM) Name() string {
+	return "npm"
+}
+
 func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
-	since, err := ingestor.GetLatestSequence()
+	since, err := getBookmark(ingestor, "now")
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
+	}
+
+	// TODO: This is a migration for bookmarks, can delete after first deployment
+	if since == nil {
+		since, _ = redis.Client.Get(context.Background(), "npm:updates:latest_sequence").Result()
 	}
 
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
@@ -79,7 +87,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 					Version:   latestVersion,
 					CreatedAt: latestTime,
 				}
-				if err := ingestor.SetLatestSequence(changes.Seq()); err != nil {
+				if _, err := setBookmark(ingestor, changes.Seq()); err != nil {
 					log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 				}
 			}
@@ -95,25 +103,6 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 				log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 			}
 		}
-	}
-}
-
-func (ingestor *NPM) SetLatestSequence(seq string) error {
-	err := redis.Client.Set(context.Background(), NPMLatestSequenceRedisKey, seq, 0).Err()
-	if err != nil {
-		return fmt.Errorf("Error trying to set key %s for redis: %s", seq, err)
-	}
-	return nil
-}
-
-func (ingestor *NPM) GetLatestSequence() (string, error) {
-	val, err := redis.Client.Get(context.Background(), NPMLatestSequenceRedisKey).Result()
-	if err == redis.Nil {
-		return "now", nil
-	} else if err != nil {
-		return "", err
-	} else {
-		return val, nil
 	}
 }
 

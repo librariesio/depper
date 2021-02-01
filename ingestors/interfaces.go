@@ -8,7 +8,6 @@ import (
 
 type Ingestor interface {
 	Schedule() string
-	Name() string
 	Ingest() []data.PackageVersion
 }
 

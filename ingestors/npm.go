@@ -10,7 +10,6 @@ import (
 
 	_ "github.com/go-kivik/couchdb/v4"
 	"github.com/librariesio/depper/data"
-	"github.com/librariesio/depper/redis"
 )
 
 const NPMRegistryHostname = "https://replicate.npmjs.com"
@@ -39,14 +38,9 @@ func (ingestor *NPM) Name() string {
 }
 
 func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
-	since, err := getBookmark(ingestor, nil)
+	since, err := getBookmark(ingestor, "now")
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
-	}
-
-	// TODO: This is a migration for bookmarks, can delete after first deployment, change default above to "now"
-	if since == nil {
-		since, _ = redis.Client.Get(context.Background(), "npm:updates:latest_sequence").Result()
 	}
 
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)

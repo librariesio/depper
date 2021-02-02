@@ -3,12 +3,13 @@ package ingestors
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/librariesio/depper/redis"
 )
 
-// Use to set a date/string bookmark for an ingestor
-func setBookmark(namer Namer, bookmark interface{}) (interface{}, error) {
+// Use to set a string bookmark for an ingestor
+func setBookmark(namer Namer, bookmark string) (string, error) {
 	key := bookmarkKey(namer)
 
 	err := redis.Client.Set(context.Background(), key, bookmark, 0).Err()
@@ -19,8 +20,17 @@ func setBookmark(namer Namer, bookmark interface{}) (interface{}, error) {
 	return bookmark, nil
 }
 
-// Use to get a date/string bookmark for an ingestor
-func getBookmark(namer Namer, defaultValue interface{}) (interface{}, error) {
+// Use to set a string bookmark time for an ingestor
+func setBookmarkTime(namer Namer, bookmarkTime time.Time) (time.Time, error) {
+	if _, err := setBookmark(namer, bookmarkTime.Format(time.RFC3339)); err != nil {
+		return bookmarkTime, err
+	}
+
+	return bookmarkTime, nil
+}
+
+// Use to get a string bookmark for an ingestor
+func getBookmark(namer Namer, defaultValue string) (string, error) {
 	val, err := redis.Client.Get(context.Background(), bookmarkKey(namer)).Result()
 	if err == redis.Nil {
 		return defaultValue, nil
@@ -29,6 +39,14 @@ func getBookmark(namer Namer, defaultValue interface{}) (interface{}, error) {
 	} else {
 		return val, nil
 	}
+}
+
+// Use to get a bookmark time for an ingestor
+func getBookmarkTime(namer Namer, defaultValue time.Time) (time.Time, error) {
+	result, err := getBookmark(namer, defaultValue.Format(time.RFC3339))
+	parsed, _ := time.Parse(time.RFC3339, result)
+
+	return parsed, err
 }
 
 func bookmarkKey(namer Namer) string {

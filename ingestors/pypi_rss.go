@@ -1,6 +1,7 @@
 package ingestors
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -10,8 +11,9 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-//const pyPiPackagesFeedUrl = "https://pypi.org/rss/packages.xml"
 const pyPiUpdatesFeedUrl = "https://pypi.org/rss/updates.xml"
+const pyPiPackagesFeedUrl = "https://pypi.org/rss/packages.xml"
+const pyPiReleasesFeedUrl = "https://pypi.org/rss/project/%s/releases.xml"
 
 type PyPiRss struct {
 	LatestRun time.Time
@@ -22,7 +24,7 @@ func NewPyPiRss() *PyPiRss {
 }
 
 func (ingestor *PyPiRss) Name() string {
-	return "npm"
+	return "pypiRss"
 }
 
 func (ingestor *PyPiRss) Schedule() string {
@@ -30,21 +32,23 @@ func (ingestor *PyPiRss) Schedule() string {
 }
 
 func (ingestor *PyPiRss) Ingest() []data.PackageVersion {
-	packages := ingestor.ingestURL(pyPiUpdatesFeedUrl)
-
+	packages := append(
+		ingestor.getUpdates(),
+		ingestor.getNewPackages()...,
+	)
 	ingestor.LatestRun = time.Now()
 
 	return packages
 }
 
-func (ingestor *PyPiRss) ingestURL(feedUrl string) []data.PackageVersion {
+func (ingestor *PyPiRss) getUpdates() []data.PackageVersion {
 	var results []data.PackageVersion
 
 	fp := gofeed.NewParser()
 
-	feed, err := fp.ParseURL(feedUrl)
+	feed, err := fp.ParseURL(pyPiUpdatesFeedUrl)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "pypiRss"}).Error(err)
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
 		return results
 	}
 
@@ -60,4 +64,81 @@ func (ingestor *PyPiRss) ingestURL(feedUrl string) []data.PackageVersion {
 	}
 
 	return results
+}
+
+func (ingestor *PyPiRss) getNewPackages() []data.PackageVersion {
+	var results []data.PackageVersion
+
+	// Get the current bookmark
+	bookmark, err := getBookmarkTime(ingestor, time.Now().AddDate(-1, 0, 0))
+	if err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+	}
+
+	fp := gofeed.NewParser()
+
+	// Get the packages feed
+	feed, err := fp.ParseURL(pyPiPackagesFeedUrl)
+	if err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
+		return results
+	}
+
+	// Get releases for items not yet seen
+	for _, item := range feed.Items {
+		if !item.PublishedParsed.After(bookmark) {
+			continue
+		}
+
+		linkBits := strings.Split(item.Link, "/")
+		packageName := linkBits[len(linkBits)-2]
+
+		results = append(results, ingestor.getReleases(packageName)...)
+	}
+
+	ingestor.setPackageBookmark(results)
+
+	return results
+}
+
+func (ingestor *PyPiRss) getReleases(packageName string) []data.PackageVersion {
+	var results []data.PackageVersion
+
+	fp := gofeed.NewParser()
+
+	feed, err := fp.ParseURL(fmt.Sprintf(pyPiReleasesFeedUrl, packageName))
+	if err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
+		return results
+	}
+
+	for _, item := range feed.Items {
+		results = append(results,
+			data.PackageVersion{
+				Platform:  "pypi",
+				Name:      packageName,
+				Version:   item.Title,
+				CreatedAt: *item.PublishedParsed,
+			})
+	}
+
+	return results
+}
+
+func (ingestor *PyPiRss) setPackageBookmark(results []data.PackageVersion) {
+	if len(results) == 0 {
+		return
+	}
+
+	var maxPublished time.Time
+
+	for _, result := range results {
+		if result.CreatedAt.After(maxPublished) {
+			maxPublished = result.CreatedAt
+		}
+	}
+
+	if _, err := setBookmarkTime(ingestor, maxPublished); err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+	}
 }

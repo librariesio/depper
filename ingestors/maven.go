@@ -23,10 +23,10 @@ func (ingestor *MavenIngestor) Schedule() string {
 }
 
 func (ingestor *MavenIngestor) Ingest() []data.PackageVersion {
-	mp := NewMavenParser(fmt.Sprintf("https://maven.libraries.io/%s/recent", ingestor.FeedName), ingestor.getLibrariesName())
+	mp := NewMavenParser(fmt.Sprintf("https://maven.libraries.io/%s/recent", ingestor.FeedName), ingestor.Name())
 	results, err := mp.GetPackages()
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": ingestor.getLibrariesName(), "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results
 	}
 	ingestor.LatestRun = time.Now()
@@ -47,7 +47,7 @@ func (ingestor *MavenIngestor) getSchedule() string {
 		return "@every 10h"
 	}
 }
-func (ingestor *MavenIngestor) getLibrariesName() string {
+func (ingestor *MavenIngestor) Name() string {
 	switch ingestor.FeedName {
 	case "mavenCentral":
 		return "maven_mavencentral"
@@ -58,6 +58,8 @@ func (ingestor *MavenIngestor) getLibrariesName() string {
 	case "springLibsRelease":
 		return "maven_springlibs"
 	default:
-		return "maven"
+		log.Fatal(fmt.Sprintf("Unknown maven ingestor name: %s", ingestor.FeedName))
+		return ""
 	}
+
 }

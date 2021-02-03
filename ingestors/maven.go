@@ -41,6 +41,8 @@ func (ingestor *MavenIngestor) getSchedule() string {
 		return "@every 1h"
 	case "hortonworks":
 		return "@every 1h"
+	case "springLibsRelease":
+		return "@every 6h"
 	default:
 		return "@every 10h"
 	}
@@ -53,6 +55,8 @@ func (ingestor *MavenIngestor) getLibrariesName() string {
 		return "maven_atlassian"
 	case "hortonworks":
 		return "maven_hortonworks"
+	case "springLibsRelease":
+		return "maven_springlibs"
 	default:
 		return "maven"
 	}

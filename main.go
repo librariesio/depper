@@ -53,6 +53,7 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewMaven("mavenCentral"))
 	depper.registerIngestor(ingestors.NewMaven("hortonworks"))
 	depper.registerIngestor(ingestors.NewMaven("atlassian"))
+	depper.registerIngestor(ingestors.NewMaven("springLibsRelease"))
 	depper.registerIngestor(ingestors.NewCargo())
 	depper.registerIngestor(ingestors.NewNuget())
 	depper.registerIngestor(ingestors.NewPackagist())

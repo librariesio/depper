@@ -96,7 +96,11 @@ func (ingestor *PyPiRss) getNewPackages() []data.PackageVersion {
 		results = append(results, ingestor.getReleases(packageName)...)
 	}
 
-	ingestor.setPackageBookmark(results)
+	if len(results) > 0 {
+		if _, err := setBookmarkTime(ingestor, data.MaxCreatedAt(results)); err != nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+		}
+	}
 
 	return results
 }
@@ -123,22 +127,4 @@ func (ingestor *PyPiRss) getReleases(packageName string) []data.PackageVersion {
 	}
 
 	return results
-}
-
-func (ingestor *PyPiRss) setPackageBookmark(results []data.PackageVersion) {
-	if len(results) == 0 {
-		return
-	}
-
-	var maxPublished time.Time
-
-	for _, result := range results {
-		if result.CreatedAt.After(maxPublished) {
-			maxPublished = result.CreatedAt
-		}
-	}
-
-	if _, err := setBookmarkTime(ingestor, maxPublished); err != nil {
-		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
-	}
 }

@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const ttl = 168 * time.Hour // 1 Week
+
 type MavenIngestor struct {
 	LatestRun time.Time
 	FeedName  string
@@ -35,6 +37,9 @@ func (ingestor *MavenIngestor) Ingest() []data.PackageVersion {
 	}
 	ingestor.LatestRun = time.Now()
 	return results
+}
+func (ingestor *MavenIngestor) TTL() time.Duration {
+	return ttl
 }
 
 func (ingestor *MavenIngestor) getSchedule() string {

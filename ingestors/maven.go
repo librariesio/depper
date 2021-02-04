@@ -13,9 +13,13 @@ type MavenIngestor struct {
 }
 
 func NewMaven(feedName string) *MavenIngestor {
-	return &MavenIngestor{
+	maven := &MavenIngestor{
 		FeedName: feedName,
 	}
+	if maven.Name() == "" {
+		log.Fatalf("Unknown maven ingestor name: %s", feedName)
+	}
+	return maven
 }
 
 func (ingestor *MavenIngestor) Schedule() string {
@@ -58,7 +62,6 @@ func (ingestor *MavenIngestor) Name() string {
 	case "springLibsRelease":
 		return "maven_springlibs"
 	default:
-		log.Fatal(fmt.Sprintf("Unknown maven ingestor name: %s", ingestor.FeedName))
 		return ""
 	}
 

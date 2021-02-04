@@ -14,6 +14,7 @@ func (publisher *LoggingPublisher) Publish(packageVersion data.PackageVersion) {
 			"platform": packageVersion.Platform,
 			"name":     packageVersion.Name,
 			"version":  packageVersion.Version,
+			"created":  packageVersion.CreatedAt,
 		}).
 		Info("Depper publish")
 }

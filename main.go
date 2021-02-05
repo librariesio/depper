@@ -55,6 +55,7 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewNuget())
 	depper.registerIngestor(ingestors.NewPackagist())
 	depper.registerIngestor(ingestors.NewPyPiRss())
+	depper.registerIngestor(ingestors.NewPyPiXmlRpc())
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {

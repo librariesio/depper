@@ -10,7 +10,7 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-const packagistSchedule = "*/15 * * * *"
+const packagistSchedule = "*/5 * * * *"
 const packagistReleasesUrl = "https://packagist.org/feeds/releases.rss"
 
 type Packagist struct {

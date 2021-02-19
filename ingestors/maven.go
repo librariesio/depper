@@ -1,36 +1,42 @@
 package ingestors
 
 import (
-	"fmt"
+	"time"
+
 	"github.com/librariesio/depper/data"
 	log "github.com/sirupsen/logrus"
-	"time"
 )
 
-const ttl = 168 * time.Hour // 1 Week
+const mavenSchedule = "@every 1h"
+const mavenTTL = 168 * time.Hour // 1 Week
+const (
+	MavenAtlassian   MavenRepository = "maven_atlassian"
+	MavenHortonworks                 = "maven_hortonworks"
+	MavenCentral                     = "maven_mavencentral"
+	MavenSpringlibs                  = "maven_springlibs"
+)
+
+type MavenRepository string
 
 type MavenIngestor struct {
-	LatestRun time.Time
-	FeedName  string
+	LatestRun  time.Time
+	Repository MavenRepository
 }
 
-func NewMaven(feedName string) *MavenIngestor {
-	maven := &MavenIngestor{
-		FeedName: feedName,
+func NewMaven(repository MavenRepository) *MavenIngestor {
+	return &MavenIngestor{
+		Repository: repository,
 	}
-	if maven.Name() == "" {
-		log.Fatalf("Unknown maven ingestor name: %s", feedName)
-	}
-	return maven
 }
 
 func (ingestor *MavenIngestor) Schedule() string {
-	return ingestor.getSchedule()
+	return mavenSchedule
 }
 
 func (ingestor *MavenIngestor) Ingest() []data.PackageVersion {
-	mp := NewMavenParser(fmt.Sprintf("https://maven.libraries.io/%s/recent", ingestor.FeedName), ingestor.Name())
-	results, err := mp.GetPackages()
+	parser := ingestor.GetParser()
+
+	results, err := parser.GetPackages()
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results
@@ -38,36 +44,22 @@ func (ingestor *MavenIngestor) Ingest() []data.PackageVersion {
 	ingestor.LatestRun = time.Now()
 	return results
 }
+
 func (ingestor *MavenIngestor) TTL() time.Duration {
-	return ttl
+	return mavenTTL
 }
 
-func (ingestor *MavenIngestor) getSchedule() string {
-	switch ingestor.FeedName {
-	case "mavenCentral":
-		return "@every 12h"
-	case "atlassian":
-		return "@every 1h"
-	case "hortonworks":
-		return "@every 1h"
-	case "springLibsRelease":
-		return "@every 6h"
-	default:
-		return "@every 10h"
-	}
-}
 func (ingestor *MavenIngestor) Name() string {
-	switch ingestor.FeedName {
-	case "mavenCentral":
-		return "maven_mavencentral"
-	case "atlassian":
-		return "maven_atlassian"
-	case "hortonworks":
-		return "maven_hortonworks"
-	case "springLibsRelease":
-		return "maven_springlibs"
-	default:
-		return ""
-	}
+	return string(ingestor.Repository)
+}
 
+func (ingestor *MavenIngestor) GetParser() *MavenParser {
+	url := map[MavenRepository]string{
+		MavenAtlassian:   "https://maven.libraries.io/atlassian/recent",
+		MavenHortonworks: "https://maven.libraries.io/hortonworks/recent",
+		MavenCentral:     "https://maven.libraries.io/mavenCentral/recent",
+		MavenSpringlibs:  "https://maven.libraries.io/springLibsRelease/recent",
+	}[ingestor.Repository]
+
+	return NewMavenParser(url, ingestor.Name())
 }

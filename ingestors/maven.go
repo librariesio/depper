@@ -11,9 +11,9 @@ const mavenSchedule = "@every 1h"
 const mavenTTL = 168 * time.Hour // 1 Week
 const (
 	MavenAtlassian   MavenRepository = "maven_atlassian"
-	MavenHortonworks                 = "maven_hortonworks"
-	MavenCentral                     = "maven_mavencentral"
-	MavenSpringlibs                  = "maven_springlibs"
+	MavenHortonworks MavenRepository = "maven_hortonworks"
+	MavenCentral     MavenRepository = "maven_mavencentral"
+	MavenSpringlibs  MavenRepository = "maven_springlibs"
 )
 
 type MavenRepository string

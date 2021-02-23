@@ -8,7 +8,7 @@ import (
 )
 
 const mavenSchedule = "@every 1h"
-const mavenTTL = 168 * time.Hour // 1 Week
+const mavenTTL = 240 * time.Hour // 10 days
 const (
 	MavenAtlassian   MavenRepository = "maven_atlassian"
 	MavenHortonworks MavenRepository = "maven_hortonworks"

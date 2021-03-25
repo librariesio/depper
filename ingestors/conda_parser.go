@@ -38,7 +38,7 @@ func (parser *CondaParser) GetPackages(lastRun time.Time) ([]data.PackageVersion
 			return results, err
 		}
 
-		jsonparser.ObjectEach(packages, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+		err = jsonparser.ObjectEach(packages, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 			name, _ := jsonparser.GetString(value, "name")
 			version, _ := jsonparser.GetString(value, "version")
 			timestamp, _ := jsonparser.GetInt(value, "timestamp")
@@ -55,6 +55,9 @@ func (parser *CondaParser) GetPackages(lastRun time.Time) ([]data.PackageVersion
 				})
 			return nil
 		})
+		if err != nil {
+			return results, err
+		}
 	}
 	return results, nil
 }

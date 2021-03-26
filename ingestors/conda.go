@@ -37,17 +37,23 @@ func (ingestor *CondaIngestor) Name() string {
 
 func (ingestor *CondaIngestor) Ingest() []data.PackageVersion {
 	// Until we save LatestRun state, we need to set a LatestRun to avoid scanning every single release in the index.
-	if ingestor.LatestRun.IsZero() {
-		ingestor.LatestRun = time.Now().Add(defaultLatestRun)
+	bookmark, err := getBookmarkTime(ingestor, time.Now().AddDate(-1, 0, 0))
+	if err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Fatal()
 	}
 	parser := ingestor.GetParser()
 
-	results, err := parser.GetPackages(ingestor.LatestRun)
+	results, err := parser.GetPackages(bookmark)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results
 	}
-	ingestor.LatestRun = time.Now()
+	if len(results) > 0 {
+		if _, err := setBookmarkTime(ingestor, data.MaxCreatedAt(results)); err != nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+		}
+	}
+
 	return results
 }
 

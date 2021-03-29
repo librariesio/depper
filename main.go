@@ -59,6 +59,8 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewPackagist())
 	depper.registerIngestor(ingestors.NewPyPiRss())
 	depper.registerIngestor(ingestors.NewPyPiXmlRpc())
+	depper.registerIngestor(ingestors.NewConda(ingestors.CondaForge))
+	depper.registerIngestor(ingestors.NewConda(ingestors.CondaMain))
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {

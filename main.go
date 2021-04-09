@@ -7,12 +7,15 @@ import (
 	"syscall"
 	"time"
 
+	logrus_bugsnag "github.com/Shopify/logrus-bugsnag"
 	"github.com/librariesio/depper/data"
 	"github.com/librariesio/depper/ingestors"
 	"github.com/librariesio/depper/publishers"
 	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
+
+	bugsnag "github.com/bugsnag/bugsnag-go"
 )
 
 const defaultTTL = 24 * time.Hour
@@ -107,6 +110,14 @@ func setupLogger() {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
 	})
+
+	// Configure bugsnag
+	bugsnag.Configure(bugsnag.Configuration{
+		APIKey:     os.Getenv("BUGSNAG_API_KEY"),
+		AppVersion: os.Getenv("GIT_COMMIT"),
+	})
+	hook, _ := logrus_bugsnag.NewBugsnagHook()
+	log.AddHook(hook)
 
 	// Send error-y logs to stderr and info-y logs to stdout
 	log.SetOutput(ioutil.Discard)

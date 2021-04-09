@@ -7,15 +7,15 @@ import (
 	"syscall"
 	"time"
 
-	logrus_bugsnag "github.com/Shopify/logrus-bugsnag"
 	"github.com/librariesio/depper/data"
 	"github.com/librariesio/depper/ingestors"
 	"github.com/librariesio/depper/publishers"
 	"github.com/robfig/cron/v3"
-	log "github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/writer"
 
+	logrus_bugsnag "github.com/Shopify/logrus-bugsnag"
 	bugsnag "github.com/bugsnag/bugsnag-go"
+	log "github.com/sirupsen/logrus"
 )
 
 const defaultTTL = 24 * time.Hour

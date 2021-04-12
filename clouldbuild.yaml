@@ -5,6 +5,6 @@ steps:
       "-t",
       "gcr.io/$PROJECT_ID/depper:$COMMIT_SHA",
       ".",
-      "--build-arg BUGSNAG_API_KEY=$BUGSNAG_API_KEY",
+      "--build-arg BUGSNAG_API_KEY=$_BUGSNAG_API_KEY",
       "--build-arg GIT_COMMIT=$COMMIT_SHA"
     ]

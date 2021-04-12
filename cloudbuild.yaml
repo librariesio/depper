@@ -10,3 +10,5 @@ steps:
       "gcr.io/$PROJECT_ID/depper:$COMMIT_SHA",
       "."
     ]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/$PROJECT_ID/depper:$COMMIT_SHA"]

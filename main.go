@@ -113,8 +113,9 @@ func setupLogger() {
 
 	// Configure bugsnag
 	bugsnag.Configure(bugsnag.Configuration{
-		APIKey:     os.Getenv("BUGSNAG_API_KEY"),
-		AppVersion: os.Getenv("GIT_COMMIT"),
+		APIKey:          os.Getenv("BUGSNAG_API_KEY"),
+		AppVersion:      os.Getenv("GIT_COMMIT"),
+		ProjectPackages: []string{"main", "github.com/librariesio/depper"},
 	})
 	hook, _ := logrus_bugsnag.NewBugsnagHook()
 	log.AddHook(hook)

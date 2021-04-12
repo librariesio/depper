@@ -1,0 +1,10 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args: [
+      "build",
+      "-t",
+      "gcr.io/$PROJECT_ID/depper:$COMMIT_SHA",
+      ".",
+      "--build-arg BUGSNAG_API_KEY=$BUGSNAG_API_KEY",
+      "--build-arg GIT_COMMIT=$COMMIT_SHA"
+    ]

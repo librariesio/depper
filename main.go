@@ -55,7 +55,6 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewMaven(ingestors.MavenAtlassian))
 	depper.registerIngestor(ingestors.NewMaven(ingestors.MavenSpringlibs))
 	depper.registerIngestor(ingestors.NewMaven(ingestors.MavenJboss))
-	depper.registerIngestor(ingestors.NewMaven(ingestors.MavenJbossEa))
 	depper.registerIngestor(ingestors.NewCargo())
 	depper.registerIngestor(ingestors.NewNuget())
 	depper.registerIngestor(ingestors.NewPackagist())

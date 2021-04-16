@@ -14,6 +14,8 @@ const (
 	MavenHortonworks MavenRepository = "maven_hortonworks"
 	MavenCentral     MavenRepository = "maven_mavencentral"
 	MavenSpringlibs  MavenRepository = "maven_springlibs"
+	MavenJboss       MavenRepository = "maven_jboss"
+	MavenJbossEa     MavenRepository = "maven_jbossea"
 )
 
 type MavenRepository string
@@ -59,6 +61,8 @@ func (ingestor *MavenIngestor) GetParser() *MavenParser {
 		MavenHortonworks: "https://maven.libraries.io/hortonworks/recent",
 		MavenCentral:     "https://maven.libraries.io/mavenCentral/recent",
 		MavenSpringlibs:  "https://maven.libraries.io/springLibsRelease/recent",
+		MavenJboss:       "https://maven.libraries.io/JBoss/recent",
+		MavenJbossEa:     "https://maven.libraries.io/JBossEa/recent",
 	}[ingestor.Repository]
 
 	return NewMavenParser(url, ingestor.Name())

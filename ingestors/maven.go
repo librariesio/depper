@@ -36,13 +36,25 @@ func (ingestor *MavenIngestor) Schedule() string {
 }
 
 func (ingestor *MavenIngestor) Ingest() []data.PackageVersion {
+	bookmark, err := getBookmarkTime(ingestor, time.Now().AddDate(-7, 0, 0))
+	if err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Fatal()
+	}
+
 	parser := ingestor.GetParser()
 
-	results, err := parser.GetPackages()
+	results, err := parser.GetPackages(bookmark)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results
 	}
+
+	if len(results) > 0 {
+		if _, err := setBookmarkTime(ingestor, data.MaxCreatedAt(results)); err != nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+		}
+	}
+
 	ingestor.LatestRun = time.Now()
 	return results
 }

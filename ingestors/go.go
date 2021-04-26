@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -15,6 +16,7 @@ import (
 
 const goSchedule = "2-59/5 * * * *"
 const goIndexUrl = "https://index.golang.org/index"
+const vendoredVersionRegexp = `^v0.0.0\-\d{14}\-[0-9a-f]{12}$` // We'll avoid publishing vendored modules
 
 type Go struct {
 	LatestRun time.Time
@@ -43,12 +45,18 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 
 	defer response.Body.Close()
 
+	re, _ := regexp.Compile(vendoredVersionRegexp)
 	scanner := bufio.NewScanner(response.Body) // Each line is valid json, but the body as a whole is not
+
 	for scanner.Scan() {
 		name, _ := jsonparser.GetString(scanner.Bytes(), "Path")
 		version, _ := jsonparser.GetString(scanner.Bytes(), "Version")
 		createdAt, _ := jsonparser.GetString(scanner.Bytes(), "Timestamp")
 		createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
+
+		if re.MatchString(version) {
+			continue
+		}
 
 		results = append(results,
 			data.PackageVersion{

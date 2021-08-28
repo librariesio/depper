@@ -58,7 +58,7 @@ func (ingestor *Drupal) Ingest() []data.PackageVersion {
 					id = parts[1]
 				}
 				packageResults := ingestor.getVersions(id)
-				if len(packageResults) == 0 { // last page didnt' have any new versions, so break and return all collected versions
+				if len(packageResults) == 0 { // last page didn't have any new versions, which means we don't have to keep looking at older packages
 					done = true
 				} else {
 					results = append(results, packageResults...)
@@ -118,8 +118,3 @@ func getHtmlDocument(url string) (*goquery.Document, error) {
 
 	return doc, nil
 }
-
-// func (ingestor *Drupal) ingestURL(feedUrl string) []data.PackageVersion {
-
-// 	return results
-// }

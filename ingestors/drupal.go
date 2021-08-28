@@ -14,7 +14,7 @@ import (
 )
 
 const drupalSchedule = "*/5 * * * *"
-const drupalModulesUrl = "https://www.drupal.org/project/project_module?page=%d&solrsort=ds_project_latest_release%20desc"
+const drupalModulesUrl = "https://www.drupal.org/project/project_module?page=%d&solrsort=ds_project_latest_release+desc"
 const drupalReleasesUrl = "https://www.drupal.org/node/%s/release/feed"
 
 type Drupal struct {
@@ -38,12 +38,13 @@ func (ingestor *Drupal) Ingest() []data.PackageVersion {
 
 	// Until we save LatestRun state, we need to set a LatestRun to avoid scanning every single release in the index.
 	if ingestor.LatestRun.IsZero() {
-		ingestor.LatestRun = time.Now().Add(-5 * 1 * 24 * time.Hour)
+		ingestor.LatestRun = time.Now().Add(-30 * 24 * time.Hour)
 	}
 
 	page := 0
 	done := false
-	for page < 1000 && !done {
+	// 100 is an arbitrary limit to ensure we don't scrape all ~2k pages of packages
+	for page < 100 && !done {
 		doc, err := getHtmlDocument(fmt.Sprintf(drupalModulesUrl, page))
 		if err != nil {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Fatal()
@@ -65,7 +66,7 @@ func (ingestor *Drupal) Ingest() []data.PackageVersion {
 			}
 		})
 		page++
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	ingestor.LatestRun = time.Now()

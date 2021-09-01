@@ -36,9 +36,9 @@ func (ingestor *Drupal) Name() string {
 func (ingestor *Drupal) Ingest() []data.PackageVersion {
 	var results []data.PackageVersion
 
-	// Until we save LatestRun state, we need to set a LatestRun to avoid scanning every single release in the index.
-	if ingestor.LatestRun.IsZero() {
-		ingestor.LatestRun = time.Now().Add(-30 * 24 * time.Hour)
+	bookmark, err := getBookmarkTime(ingestor, time.Now().AddDate(-1, 0, 0))
+	if err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Fatal()
 	}
 
 	page := 0
@@ -57,7 +57,7 @@ func (ingestor *Drupal) Ingest() []data.PackageVersion {
 					parts := strings.SplitN(idAttr, "-", 2) // e.g. "node-1234"
 					id = parts[1]
 				}
-				packageResults := ingestor.getVersions(id)
+				packageResults := ingestor.getVersions(id, bookmark)
 				if len(packageResults) == 0 { // last page didn't have any new versions, which means we don't have to keep looking at older packages
 					done = true
 				} else {
@@ -69,12 +69,17 @@ func (ingestor *Drupal) Ingest() []data.PackageVersion {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	ingestor.LatestRun = time.Now()
+	if len(results) > 0 {
+		log.Printf("Setting bookmark to %s\n", data.MaxCreatedAt(results))
+		if _, err := setBookmarkTime(ingestor, data.MaxCreatedAt(results)); err != nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+		}
+	}
 
 	return results
 }
 
-func (ingestor *Drupal) getVersions(id string) []data.PackageVersion {
+func (ingestor *Drupal) getVersions(id string, bookmark time.Time) []data.PackageVersion {
 	var results []data.PackageVersion
 	fp := gofeed.NewParser()
 
@@ -87,7 +92,7 @@ func (ingestor *Drupal) getVersions(id string) []data.PackageVersion {
 	for _, item := range feed.Items { // Mon Jan 2 15:04:05 -0700 MST 2006
 		createdAtTime, _ := time.Parse(time.RFC1123, item.Published)
 		nameAndVersion := strings.SplitN(item.Title, " ", 2) // e.g. ctools 7.x-1.19
-		if createdAtTime.After(ingestor.LatestRun) {
+		if createdAtTime.After(bookmark) {
 			results = append(results,
 				data.PackageVersion{
 					Platform:  "drupal",

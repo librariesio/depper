@@ -88,7 +88,7 @@ func (ingestor *Drupal) getVersions(id string, bookmark time.Time) []data.Packag
 		return results
 	}
 
-	for _, item := range feed.Items { // Mon Jan 2 15:04:05 -0700 MST 2006
+	for _, item := range feed.Items {
 		createdAtTime, _ := time.Parse(time.RFC1123, item.Published)
 		nameAndVersion := strings.SplitN(item.Title, " ", 2) // e.g. ctools 7.x-1.19
 		if createdAtTime.After(bookmark) {

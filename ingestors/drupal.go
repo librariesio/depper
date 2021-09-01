@@ -13,7 +13,7 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-const drupalSchedule = "*/5 * * * *"
+const drupalSchedule = "0 */4 * * *"
 const drupalModulesUrl = "https://www.drupal.org/project/project_module?page=%d&solrsort=ds_project_latest_release+desc"
 const drupalReleasesUrl = "https://www.drupal.org/node/%s/release/feed"
 

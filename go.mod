@@ -3,6 +3,7 @@ module github.com/librariesio/depper
 go 1.16
 
 require (
+	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/Shopify/logrus-bugsnag v0.0.0-20171204204709-577dee27f20d
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/buger/jsonparser v1.1.0

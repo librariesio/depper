@@ -20,7 +20,7 @@ func setBookmark(namer Namer, bookmark string) (string, error) {
 	return bookmark, nil
 }
 
-// Use to set a string bookmark time for an ingestor
+// Use to set a datetime bookmark time for an ingestor
 func setBookmarkTime(namer Namer, bookmarkTime time.Time) (time.Time, error) {
 	if _, err := setBookmark(namer, bookmarkTime.Format(time.RFC3339)); err != nil {
 		return bookmarkTime, err

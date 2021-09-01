@@ -70,7 +70,6 @@ func (ingestor *Drupal) Ingest() []data.PackageVersion {
 	}
 
 	if len(results) > 0 {
-		log.Printf("Setting bookmark to %s\n", data.MaxCreatedAt(results))
 		if _, err := setBookmarkTime(ingestor, data.MaxCreatedAt(results)); err != nil {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 		}

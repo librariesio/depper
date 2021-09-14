@@ -13,6 +13,8 @@ When new package releases are found, they are pushed to a shared redis queue for
 
 #### Ingestor Cursor Patterns
 
+Depper has to know where to pick up once it restarts, so there are several methods for storing such a cursor:
+
 * `ingestors.setBookmarkTime()` + `ingestor.getBookmarkTime()` [RECOMMENDED] : reads/sets a `time.Time` to redis (persistent)
 * `ingestors.setBookmark()` + `ingestor.getBookmark()`: reads/sets an arbitrary string to redis (persistent)
 * `LatestRun`: reads/sets a `time.Time` on the ingestor instance (non-persistent)

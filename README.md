@@ -13,7 +13,7 @@ When new versions are found for packages, they are pushed to a shared redis queu
 
 #### Ingestor Cursor Patterns
 
-* [RECOMMENDED] `ingestors.setBookmarkTime()` + `ingestor.getBookmarkTime()`: reads/sets a `time.Time` to redis (persistent)
+* `ingestors.setBookmarkTime()` + `ingestor.getBookmarkTime()` [RECOMMENDED] : reads/sets a `time.Time` to redis (persistent)
 * `ingestors.setBookmark()` + `ingestor.getBookmark()`: reads/sets an arbitrary string to redis (persistent)
 * `LatestRun`: reads/sets a `time.Time` on the ingestor instance (non-persistent)
 

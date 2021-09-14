@@ -1,6 +1,21 @@
 # depper
 
-A dapper consumer of ecosystem APIs.
+> A dapper consumer of ecosystem APIs.
+
+Depper is an ingestor of package releases from multiple ecosystems (each ecosystem is found in [ingestors/](ingestors/)).
+
+When new versions are found for packages, they are pushed to a shared redis queue for [Libraries.io](https://libraries.io) to process.
+
+#### Ingestor Types
+
+* `ingestors.Ingestor`: these are scheduled to ingest new versions at specific intervals (`ingestor.Schedule()`).
+* `ingestors.StreamingIngestor`: these are always running in a goroutine, ingesting new releases via a channel
+
+#### Ingestor Cursor Patterns
+
+* [RECOMMENDED] `ingestors.setBookmarkTime()` + `ingestor.getBookmarkTime()`: reads/sets a `time.Time` to redis (persistent)
+* `ingestors.setBookmark()` + `ingestor.getBookmark()`: reads/sets an arbitrary string to redis (persistent)
+* `LatestRun`: reads/sets a `time.Time` on the ingestor instance (non-persistent)
 
 # Deploying
 

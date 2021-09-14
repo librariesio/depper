@@ -17,9 +17,12 @@ When new versions are found for packages, they are pushed to a shared redis queu
 * `ingestors.setBookmark()` + `ingestor.getBookmark()`: reads/sets an arbitrary string to redis (persistent)
 * `LatestRun`: reads/sets a `time.Time` on the ingestor instance (non-persistent)
 
+# Running Locally
+
+`go run main.go`
+
 # Deploying
 
 1) merge PR into `main` branch
 2) `tl setenv libraries`
 3) `./bin/deploy.sh`
-

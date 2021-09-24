@@ -43,13 +43,14 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
 
-	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
-	changes, err := couchDb.Changes(context.Background(), kivik.Options{
+	options := kivik.Options{
 		"feed":         "continuous",
 		"since":        since,
 		"include_docs": true,
 		"timeout":      60000 * 2,
-	})
+	}
+	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
+	changes, err := couchDb.Changes(context.Background(), options)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
@@ -90,8 +91,11 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		} else {
 			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error("Reconnecting in 5 seconds.")
 			time.Sleep(5 * time.Second)
+			// It's not clear what is behind the "stream error: stream ID 123; INTERNAL_ERROR", but it is reproducible
+			// if the sequence has somehow gotten far ahead in the future. Reset it to now if we see it, to fix.
+			options["since"] = "now"
 			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
-			changes, err = couchDb.Changes(context.Background(), kivik.Options{"feed": "continuous", "since": since, "include_docs": true})
+			changes, err = couchDb.Changes(context.Background(), options)
 			if err != nil {
 				log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 			}

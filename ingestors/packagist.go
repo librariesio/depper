@@ -21,6 +21,10 @@ func NewPackagist() *Packagist {
 	return &Packagist{}
 }
 
+func (ingestor *Packagist) Name() string {
+	return "packagist_main"
+}
+
 func (ingestor *Packagist) Schedule() string {
 	return packagistSchedule
 }
@@ -38,7 +42,7 @@ func (ingestor *Packagist) ingestURL(feedUrl string) []data.PackageVersion {
 
 	feed, err := fp.ParseURL(packagistReleasesUrl)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "packagist"}).Error(err)
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
 		return results
 	}
 
@@ -46,7 +50,7 @@ func (ingestor *Packagist) ingestURL(feedUrl string) []data.PackageVersion {
 		nameAndVersion := strings.SplitN(item.GUID, " ", 2)
 		results = append(results,
 			data.PackageVersion{
-				Platform:  "packagist",
+				Platform:  ingestor.Name(),
 				Name:      nameAndVersion[0],
 				Version:   nameAndVersion[1],
 				CreatedAt: *item.PublishedParsed,

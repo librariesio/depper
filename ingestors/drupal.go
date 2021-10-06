@@ -30,7 +30,7 @@ func (ingestor *Drupal) Schedule() string {
 }
 
 func (ingestor *Drupal) Name() string {
-	return "drupal"
+	return "packagist_drupal"
 }
 
 func (ingestor *Drupal) Ingest() []data.PackageVersion {
@@ -94,7 +94,7 @@ func (ingestor *Drupal) getVersions(id string, bookmark time.Time) []data.Packag
 		if createdAtTime.After(bookmark) {
 			results = append(results,
 				data.PackageVersion{
-					Platform:  "drupal",
+					Platform:  ingestor.Name(),
 					Name:      nameAndVersion[0],
 					Version:   nameAndVersion[1],
 					CreatedAt: createdAtTime,

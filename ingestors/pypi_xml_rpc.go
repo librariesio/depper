@@ -1,6 +1,8 @@
 package ingestors
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/librariesio/depper/data"
@@ -48,7 +50,13 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 
 	err = client.Call("changelog", int(since.Unix()), &response)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+		if strings.Contains(fmt.Sprint(err), "illegal character code") {
+			// If we encounter illegal characters in the XML, ignore this page and treat it like an empty response.
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
+			response = [][]interface{}{}
+		} else {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+		}
 	}
 
 	for _, log := range response {
@@ -65,10 +73,8 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 		}
 	}
 
-	if len(results) > 0 {
-		if _, err := setBookmarkTime(ingestor, data.MaxCreatedAt(results)); err != nil {
-			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
-		}
+	if _, err := setBookmarkTime(ingestor, data.MaxCreatedAt(results)); err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 	}
 
 	return results

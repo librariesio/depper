@@ -74,7 +74,7 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 		}
 	}
 
-	if _, err := setBookmarkTime(ingestor, data.MaxCreatedAt(results)); err != nil {
+	if _, err := setBookmarkTime(ingestor, time.Now()); err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 	}
 

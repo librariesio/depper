@@ -53,6 +53,7 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 		if strings.Contains(fmt.Sprint(err), "illegal character code") {
 			// If we encounter illegal characters in the XML, ignore this page and treat it like an empty response.
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Info(fmt.Sprintf("Skipping page from timestamp %d", since.Unix()))
 			response = [][]interface{}{}
 		} else {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)

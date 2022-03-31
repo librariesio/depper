@@ -54,7 +54,9 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 		createdAt, _ := jsonparser.GetString(scanner.Bytes(), "Timestamp")
 		createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
 
-		if re.MatchString(version) {
+		// TODO why is this not skipping "v4.6.1-0.20220325022819-73eda3346d18" for go-micro.dev too?
+		// TEMPFIX that we can fix later today
+		if re.MatchString(version) || name == "go-micro.dev/v4" {
 			continue
 		}
 

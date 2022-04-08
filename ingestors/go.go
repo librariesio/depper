@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/mod/module"
 
 	"github.com/buger/jsonparser"
 	"github.com/librariesio/depper/data"
@@ -16,7 +16,6 @@ import (
 
 const goSchedule = "2-59/5 * * * *"
 const goIndexUrl = "https://index.golang.org/index"
-const vendoredVersionRegexp = `^v0.0.0\-\d{14}\-[0-9a-f]{12}$` // We'll avoid publishing vendored modules
 
 type Go struct {
 	LatestRun time.Time
@@ -45,7 +44,6 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 
 	defer response.Body.Close()
 
-	re, _ := regexp.Compile(vendoredVersionRegexp)
 	scanner := bufio.NewScanner(response.Body) // Each line is valid json, but the body as a whole is not
 
 	for scanner.Scan() {
@@ -54,9 +52,8 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 		createdAt, _ := jsonparser.GetString(scanner.Bytes(), "Timestamp")
 		createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
 
-		// TODO why is this not skipping "v4.6.1-0.20220325022819-73eda3346d18" for go-micro.dev too?
-		// TEMPFIX that we can fix later today
-		if re.MatchString(version) || name == "go-micro.dev/v4" {
+		// Avoid publishing pseudo-versions, which are revisions for which no semver tag exists.
+		if module.IsPseudoVersion(version) {
 			continue
 		}
 

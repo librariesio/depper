@@ -85,9 +85,6 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 					log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 				}
 			}
-		} else if changes.EOQ() {
-			log.WithFields(log.Fields{"ingestor": "npm", "error": "EOQ"}).Error("Retrying in 5 seconds.")
-			time.Sleep(5 * time.Second)
 		} else {
 			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error("Reconnecting in 5 seconds.")
 			time.Sleep(5 * time.Second)

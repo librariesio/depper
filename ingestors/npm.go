@@ -23,6 +23,7 @@ func NewNPM() *NPM {
 	return &NPM{couchClient: getCouchClient()}
 }
 
+// See https://github.com/npm/registry-follower-tutorial#moar-data-please
 type NPMChangeDoc struct {
 	ID       string `json:"_id"`
 	Rev      string `json:"_rev,omitempty"`
@@ -43,11 +44,15 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
 
+	// See https://docs.couchdb.org/en/3.2.0/api/database/changes.html
 	options := kivik.Options{
 		"feed":         "continuous",
 		"since":        since,
 		"include_docs": true,
-		"timeout":      60000 * 2,
+		// NB: previously with "timeout: 60000 * 2", we kept getting an internal error from npm, which surfaced as
+		// "stream error: stream ID 123; INTERNAL_ERROR". They showed up when there was no activity for 50 seconds,
+		// and we're not sure why. But setting a heartbeat ensures the connection stays open every 5 seconds via empty line.
+		"heartbeat": 5000,
 	}
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
 	changes, err := couchDb.Changes(context.Background(), options)
@@ -88,9 +93,6 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		} else {
 			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error("Reconnecting in 5 seconds.")
 			time.Sleep(5 * time.Second)
-			// It's not clear what is behind the "stream error: stream ID 123; INTERNAL_ERROR", but it is reproducible
-			// if the sequence has somehow gotten far ahead in the future. Reset it to now if we see it, to fix.
-			options["since"] = "now"
 			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
 			changes, err = couchDb.Changes(context.Background(), options)
 			if err != nil {

@@ -51,8 +51,8 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		"include_docs": true,
 		// NB: previously with "timeout: 60000 * 2", we kept getting an internal error from npm, which surfaced as
 		// "stream error: stream ID 123; INTERNAL_ERROR". They showed up when there was no activity for 50 seconds,
-		// and we're not sure why. But setting a heartbeat ensure connection stays open every 5 seconds via empty line.
-		"heartbeat": 5000, // CouchDB docs: "Period in milliseconds after which an empty line is sent in the results... Overrides any timeout to keep the feed alive indefinitely. Default is 60000. May be true to use default value."
+		// and we're not sure why. But setting a heartbeat ensures the connection stays open every 5 seconds via empty line.
+		"heartbeat": 5000,
 	}
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
 	changes, err := couchDb.Changes(context.Background(), options)

@@ -38,6 +38,13 @@ func (pipeline *Pipeline) run() {
 
 func (pipeline *Pipeline) process(publishing publishing) {
 	if !pipeline.shouldPublish(publishing) {
+		log.WithFields(log.Fields{
+			"platform": publishing.PackageVersion.Platform,
+			"name":     publishing.PackageVersion.Name,
+			"version":  publishing.PackageVersion.Version,
+			"created":  publishing.PackageVersion.CreatedAt,
+		}).
+			Info("Depper skip")
 		return
 	}
 

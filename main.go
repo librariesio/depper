@@ -111,6 +111,7 @@ func (depper *Depper) registerIngestorStream(ingestor ingestors.StreamingIngesto
 func setupLogger() {
 	log.SetFormatter(&log.TextFormatter{
 		FullTimestamp: true,
+		ForceQuote:    true,
 	})
 
 	// Configure bugsnag

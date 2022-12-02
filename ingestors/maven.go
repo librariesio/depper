@@ -44,12 +44,6 @@ func (ingestor *MavenIngestor) Ingest() []data.PackageVersion {
 		return results
 	}
 
-	if len(results) > 0 {
-		if _, err := setBookmarkTime(ingestor, data.MaxCreatedAt(results)); err != nil {
-			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
-		}
-	}
-
 	ingestor.LatestRun = time.Now()
 	return results
 }

@@ -36,14 +36,9 @@ func (ingestor *MavenIngestor) Schedule() string {
 }
 
 func (ingestor *MavenIngestor) Ingest() []data.PackageVersion {
-	bookmark, err := getBookmarkTime(ingestor, time.Now().AddDate(-7, 0, 0))
-	if err != nil {
-		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Fatal()
-	}
-
 	parser := ingestor.GetParser()
 
-	results, err := parser.GetPackages(bookmark)
+	results, err := parser.GetPackages()
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results

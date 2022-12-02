@@ -27,7 +27,7 @@ func NewMavenParser(url string, platform string) *MavenParser {
 	}
 }
 
-func (parser *MavenParser) GetPackages(lastRun time.Time) ([]data.PackageVersion, error) {
+func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 	var results []data.PackageVersion
 
 	response, err := http.Get(parser.URL)
@@ -44,17 +44,13 @@ func (parser *MavenParser) GetPackages(lastRun time.Time) ([]data.PackageVersion
 	}
 
 	for _, maven := range mavens {
-		createdAt := time.Unix(0, maven.LastModified*int64(time.Millisecond))
-
-		if createdAt.After(lastRun) {
-			results = append(results,
-				data.PackageVersion{
-					Platform:  parser.Platform,
-					Name:      maven.Name,
-					Version:   maven.Version,
-					CreatedAt: createdAt,
-				})
-		}
+		results = append(results,
+			data.PackageVersion{
+				Platform:  parser.Platform,
+				Name:      maven.Name,
+				Version:   maven.Version,
+				CreatedAt: time.Unix(0, maven.LastModified*int64(time.Millisecond)),
+			})
 	}
 
 	return results, nil

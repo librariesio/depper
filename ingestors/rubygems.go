@@ -56,15 +56,15 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 		version, _ := jsonparser.GetString(value, "version")
 		createdAt, _ := jsonparser.GetString(value, "version_created_at")
 		createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
-		lag := time.Since(createdAtTime)
+		discoveryLag := time.Since(createdAtTime)
 
 		results = append(results,
 			data.PackageVersion{
-				Platform:  "rubygems",
-				Name:      name,
-				Version:   version,
-				CreatedAt: createdAtTime,
-				Lag:       lag,
+				Platform:     "rubygems",
+				Name:         name,
+				Version:      version,
+				CreatedAt:    createdAtTime,
+				DiscoveryLag: discoveryLag,
 			})
 	})
 

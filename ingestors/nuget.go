@@ -120,11 +120,11 @@ func (ingestor *Nuget) getPage(url string) ([]data.PackageVersion, error) {
 			results = append(
 				results,
 				data.PackageVersion{
-					Platform:  "nuget",
-					Name:      pkg.Name,
-					Version:   pkg.Version,
-					CreatedAt: pkg.CommitTime,
-					Lag:       time.Since(pkg.CommitTime),
+					Platform:     "nuget",
+					Name:         pkg.Name,
+					Version:      pkg.Version,
+					CreatedAt:    pkg.CommitTime,
+					DiscoveryLag: time.Since(pkg.CommitTime),
 				},
 			)
 		}

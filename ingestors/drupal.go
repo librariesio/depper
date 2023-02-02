@@ -92,14 +92,14 @@ func (ingestor *Drupal) getVersions(id string, bookmark time.Time) []data.Packag
 		createdAtTime, _ := time.Parse(time.RFC1123, item.Published)
 		nameAndVersion := strings.SplitN(item.Title, " ", 2) // e.g. ctools 7.x-1.19
 		if createdAtTime.After(bookmark) {
-			lag := time.Since(createdAtTime)
+			discoveryLag := time.Since(createdAtTime)
 			results = append(results,
 				data.PackageVersion{
-					Platform:  ingestor.Name(),
-					Name:      nameAndVersion[0],
-					Version:   nameAndVersion[1],
-					CreatedAt: createdAtTime,
-					Lag:       lag,
+					Platform:     ingestor.Name(),
+					Name:         nameAndVersion[0],
+					Version:      nameAndVersion[1],
+					CreatedAt:    createdAtTime,
+					DiscoveryLag: discoveryLag,
 				})
 		}
 	}

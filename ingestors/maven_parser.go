@@ -45,15 +45,15 @@ func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 
 	for _, maven := range mavens {
 		createdAt := time.Unix(0, maven.LastModified*int64(time.Millisecond))
-		lag := time.Since(createdAt)
+		discoveryLag := time.Since(createdAt)
 
 		results = append(results,
 			data.PackageVersion{
-				Platform:  parser.Platform,
-				Name:      maven.Name,
-				Version:   maven.Version,
-				CreatedAt: createdAt,
-				Lag:       lag,
+				Platform:     parser.Platform,
+				Name:         maven.Name,
+				Version:      maven.Version,
+				CreatedAt:    createdAt,
+				DiscoveryLag: discoveryLag,
 			})
 	}
 

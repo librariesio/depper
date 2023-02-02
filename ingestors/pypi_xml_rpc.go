@@ -65,14 +65,14 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 		switch log[3].(string) {
 		case "new release", "yank release", "remove release":
 			createdAt := time.Unix(log[2].(int64), 0)
-			lag := time.Since(createdAt)
+			discoveryLag := time.Since(createdAt)
 			results = append(results,
 				data.PackageVersion{
-					Platform:  "pypi",
-					Name:      log[0].(string),
-					Version:   log[1].(string),
-					CreatedAt: createdAt,
-					Lag:       lag,
+					Platform:     "pypi",
+					Name:         log[0].(string),
+					Version:      log[1].(string),
+					CreatedAt:    createdAt,
+					DiscoveryLag: discoveryLag,
 				})
 		}
 	}

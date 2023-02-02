@@ -2,7 +2,7 @@ package ingestors
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -36,7 +36,7 @@ func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 	}
 	defer response.Body.Close()
 
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	var mavens []mavenUpdate
 	err = json.Unmarshal(body, &mavens)
 	if err != nil {
@@ -44,12 +44,16 @@ func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 	}
 
 	for _, maven := range mavens {
+		createdAt := time.Unix(0, maven.LastModified*int64(time.Millisecond))
+		discoveryLag := time.Since(createdAt)
+
 		results = append(results,
 			data.PackageVersion{
-				Platform:  parser.Platform,
-				Name:      maven.Name,
-				Version:   maven.Version,
-				CreatedAt: time.Unix(0, maven.LastModified*int64(time.Millisecond)),
+				Platform:     parser.Platform,
+				Name:         maven.Name,
+				Version:      maven.Version,
+				CreatedAt:    createdAt,
+				DiscoveryLag: discoveryLag,
 			})
 	}
 

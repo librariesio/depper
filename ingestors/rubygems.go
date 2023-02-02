@@ -1,7 +1,7 @@
 package ingestors
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -49,20 +49,22 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 
 	defer response.Body.Close()
 
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 
 	_, err = jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 		name, _ := jsonparser.GetString(value, "name")
 		version, _ := jsonparser.GetString(value, "version")
 		createdAt, _ := jsonparser.GetString(value, "version_created_at")
 		createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
+		discoveryLag := time.Since(createdAtTime)
 
 		results = append(results,
 			data.PackageVersion{
-				Platform:  "rubygems",
-				Name:      name,
-				Version:   version,
-				CreatedAt: createdAtTime,
+				Platform:     "rubygems",
+				Name:         name,
+				Version:      version,
+				CreatedAt:    createdAtTime,
+				DiscoveryLag: discoveryLag,
 			})
 	})
 

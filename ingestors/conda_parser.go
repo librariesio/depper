@@ -2,7 +2,7 @@ package ingestors
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -32,7 +32,7 @@ func (parser *CondaParser) GetPackages(lastRun time.Time) ([]data.PackageVersion
 			return results, err
 		}
 		defer response.Body.Close()
-		jsonBody, _ := ioutil.ReadAll(response.Body)
+		jsonBody, _ := io.ReadAll(response.Body)
 		packages, _, _, err := jsonparser.Get(jsonBody, "packages")
 		if err != nil {
 			return results, err
@@ -46,12 +46,15 @@ func (parser *CondaParser) GetPackages(lastRun time.Time) ([]data.PackageVersion
 			if timeCode.Before(lastRun) {
 				return nil
 			}
+			discoveryLag := time.Since(timeCode)
+
 			results = append(results,
 				data.PackageVersion{
-					Platform:  parser.Platform,
-					Name:      name,
-					Version:   version,
-					CreatedAt: timeCode,
+					Platform:     parser.Platform,
+					Name:         name,
+					Version:      version,
+					CreatedAt:    timeCode,
+					DiscoveryLag: discoveryLag,
 				})
 			return nil
 		})

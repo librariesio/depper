@@ -56,10 +56,11 @@ func (ingestor *PyPiRss) getUpdates() []data.PackageVersion {
 		nameAndVersion := strings.SplitN(item.Title, " ", 2)
 		results = append(results,
 			data.PackageVersion{
-				Platform:  "pypi",
-				Name:      nameAndVersion[0],
-				Version:   nameAndVersion[1],
-				CreatedAt: *item.PublishedParsed,
+				Platform:     "pypi",
+				Name:         nameAndVersion[0],
+				Version:      nameAndVersion[1],
+				CreatedAt:    *item.PublishedParsed,
+				DiscoveryLag: time.Since(*item.PublishedParsed),
 			})
 	}
 
@@ -119,10 +120,11 @@ func (ingestor *PyPiRss) getReleases(packageName string) []data.PackageVersion {
 	for _, item := range feed.Items {
 		results = append(results,
 			data.PackageVersion{
-				Platform:  "pypi",
-				Name:      packageName,
-				Version:   item.Title,
-				CreatedAt: *item.PublishedParsed,
+				Platform:     "pypi",
+				Name:         packageName,
+				Version:      item.Title,
+				CreatedAt:    *item.PublishedParsed,
+				DiscoveryLag: time.Since(*item.PublishedParsed),
 			})
 	}
 

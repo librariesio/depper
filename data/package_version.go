@@ -3,10 +3,11 @@ package data
 import "time"
 
 type PackageVersion struct {
-	Platform  string
-	Name      string
-	Version   string
-	CreatedAt time.Time
+	Platform     string
+	Name         string
+	Version      string
+	CreatedAt    time.Time
+	DiscoveryLag time.Duration // (time of depper discovery) - (creation time, as reported by repository)
 }
 
 func MaxCreatedAt(packageVersions []PackageVersion) time.Time {

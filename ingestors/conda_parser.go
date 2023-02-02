@@ -46,7 +46,7 @@ func (parser *CondaParser) GetPackages(lastRun time.Time) ([]data.PackageVersion
 			if timeCode.Before(lastRun) {
 				return nil
 			}
-			lag := time.Now().Sub(timeCode)
+			lag := time.Since(timeCode)
 
 			results = append(results,
 				data.PackageVersion{

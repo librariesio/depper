@@ -52,7 +52,7 @@ func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 				version, _ := jsonparser.GetString(value, "newest_version")
 				createdAt, _ := jsonparser.GetString(value, "updated_at")
 				createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
-				lag := time.Now().Sub(createdAtTime)
+				lag := time.Since(createdAtTime)
 
 				results = append(
 					results,

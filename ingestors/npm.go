@@ -80,7 +80,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 				}
 			}
 			if latestVersion != "" {
-				lag := time.Now().Sub(latestTime)
+				lag := time.Since(latestTime)
 				results <- data.PackageVersion{
 					Platform:  "npm",
 					Name:      doc.Name,

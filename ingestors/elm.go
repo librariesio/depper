@@ -47,7 +47,7 @@ func (ingestor *Elm) ingestURL(feedUrl string) []data.PackageVersion {
 	for _, item := range feed.Items {
 		parsed, _ := url.Parse(item.Link)
 		parts := strings.Split(parsed.Path, "/")
-		lag := time.Now().Sub(*item.PublishedParsed)
+		lag := time.Since(*item.PublishedParsed)
 		results = append(results,
 			data.PackageVersion{
 				Platform:  "elm",

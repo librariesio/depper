@@ -2,7 +2,7 @@ package ingestors
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -78,7 +78,7 @@ func (ingestor *Nuget) getIndex(url string) ([]data.PackageVersion, error) {
 	defer response.Body.Close()
 
 	var index nugetIndex
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	err = json.Unmarshal(body, &index)
 	if err != nil {
 		return results, err
@@ -107,7 +107,7 @@ func (ingestor *Nuget) getPage(url string) ([]data.PackageVersion, error) {
 	}
 	defer response.Body.Close()
 
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	var page nugetPage
 	err = json.Unmarshal(body, &page)
 	if err != nil {

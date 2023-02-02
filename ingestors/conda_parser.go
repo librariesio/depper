@@ -2,7 +2,7 @@ package ingestors
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -32,7 +32,7 @@ func (parser *CondaParser) GetPackages(lastRun time.Time) ([]data.PackageVersion
 			return results, err
 		}
 		defer response.Body.Close()
-		jsonBody, _ := ioutil.ReadAll(response.Body)
+		jsonBody, _ := io.ReadAll(response.Body)
 		packages, _, _, err := jsonparser.Get(jsonBody, "packages")
 		if err != nil {
 			return results, err

@@ -1,7 +1,7 @@
 package ingestors
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -43,7 +43,7 @@ func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 
 	defer response.Body.Close()
 
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	err = jsonparser.ObjectEach(body, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 		var subErr error
 		if string(key) == "just_updated" || string(key) == "new_crates" {

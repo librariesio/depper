@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -124,7 +124,7 @@ func setupLogger() {
 	log.AddHook(hook)
 
 	// Send error-y logs to stderr and info-y logs to stdout
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 	log.AddHook(&writer.Hook{
 		Writer: os.Stderr,
 		LogLevels: []log.Level{

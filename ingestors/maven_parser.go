@@ -2,7 +2,7 @@ package ingestors
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -36,7 +36,7 @@ func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 	}
 	defer response.Body.Close()
 
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	var mavens []mavenUpdate
 	err = json.Unmarshal(body, &mavens)
 	if err != nil {

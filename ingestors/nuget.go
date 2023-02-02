@@ -124,6 +124,7 @@ func (ingestor *Nuget) getPage(url string) ([]data.PackageVersion, error) {
 					Name:      pkg.Name,
 					Version:   pkg.Version,
 					CreatedAt: pkg.CommitTime,
+					Lag:       time.Now().Sub(pkg.CommitTime),
 				},
 			)
 		}

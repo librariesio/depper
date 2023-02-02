@@ -80,11 +80,13 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 				}
 			}
 			if latestVersion != "" {
+				lag := time.Now().Sub(latestTime)
 				results <- data.PackageVersion{
 					Platform:  "npm",
 					Name:      doc.Name,
 					Version:   latestVersion,
 					CreatedAt: latestTime,
+					Lag:       lag,
 				}
 				if _, err := setBookmark(ingestor, changes.Seq()); err != nil {
 					log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)

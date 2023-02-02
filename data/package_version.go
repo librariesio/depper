@@ -7,6 +7,7 @@ type PackageVersion struct {
 	Name      string
 	Version   string
 	CreatedAt time.Time
+	Lag       time.Duration
 }
 
 func MaxCreatedAt(packageVersions []PackageVersion) time.Time {

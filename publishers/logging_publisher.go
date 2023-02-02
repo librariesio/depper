@@ -15,6 +15,7 @@ func (publisher *LoggingPublisher) Publish(packageVersion data.PackageVersion) {
 			"name":     packageVersion.Name,
 			"version":  packageVersion.Version,
 			"created":  packageVersion.CreatedAt,
+			"lag":      packageVersion.Lag.Milliseconds(),
 		}).
 		Info("Depper publish")
 }

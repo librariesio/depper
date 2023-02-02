@@ -54,6 +54,7 @@ func (ingestor *Packagist) ingestURL(feedUrl string) []data.PackageVersion {
 				Name:      nameAndVersion[0],
 				Version:   nameAndVersion[1],
 				CreatedAt: *item.PublishedParsed,
+				Lag:       time.Now().Sub(*item.PublishedParsed),
 			})
 	}
 

@@ -56,6 +56,7 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 		if module.IsPseudoVersion(version) {
 			continue
 		}
+		lag := time.Now().Sub(createdAtTime)
 
 		results = append(results,
 			data.PackageVersion{
@@ -63,6 +64,7 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 				Name:      name,
 				Version:   version,
 				CreatedAt: createdAtTime,
+				Lag:       lag,
 			})
 	}
 	if err := scanner.Err(); err != nil {

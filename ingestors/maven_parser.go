@@ -44,12 +44,16 @@ func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 	}
 
 	for _, maven := range mavens {
+		createdAt := time.Unix(0, maven.LastModified*int64(time.Millisecond))
+		lag := time.Now().Sub(createdAt)
+
 		results = append(results,
 			data.PackageVersion{
 				Platform:  parser.Platform,
 				Name:      maven.Name,
 				Version:   maven.Version,
-				CreatedAt: time.Unix(0, maven.LastModified*int64(time.Millisecond)),
+				CreatedAt: createdAt,
+				Lag:       lag,
 			})
 	}
 

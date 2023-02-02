@@ -60,6 +60,7 @@ func (ingestor *PyPiRss) getUpdates() []data.PackageVersion {
 				Name:      nameAndVersion[0],
 				Version:   nameAndVersion[1],
 				CreatedAt: *item.PublishedParsed,
+				Lag:       time.Now().Sub(*item.PublishedParsed),
 			})
 	}
 
@@ -123,6 +124,7 @@ func (ingestor *PyPiRss) getReleases(packageName string) []data.PackageVersion {
 				Name:      packageName,
 				Version:   item.Title,
 				CreatedAt: *item.PublishedParsed,
+				Lag:       time.Now().Sub(*item.PublishedParsed),
 			})
 	}
 

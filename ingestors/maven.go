@@ -10,12 +10,7 @@ import (
 const mavenSchedule = "@every 1h"
 const mavenTTL = 720 * time.Hour // 30 days
 const (
-	MavenAtlassian   MavenRepository = "maven_atlassian"
-	MavenHortonworks MavenRepository = "maven_hortonworks"
-	MavenCentral     MavenRepository = "maven_mavencentral"
-	MavenSpringlibs  MavenRepository = "maven_springlibs"
-	MavenJboss       MavenRepository = "maven_jboss"
-	MavenJbossEa     MavenRepository = "maven_jbossea"
+	MavenCentral MavenRepository = "maven_mavencentral"
 )
 
 type MavenRepository string
@@ -58,12 +53,7 @@ func (ingestor *MavenIngestor) Name() string {
 
 func (ingestor *MavenIngestor) GetParser() *MavenParser {
 	url := map[MavenRepository]string{
-		MavenAtlassian:   "https://maven.libraries.io/atlassian/recent",
-		MavenHortonworks: "https://maven.libraries.io/hortonworks/recent",
-		MavenCentral:     "https://maven.libraries.io/mavenCentral/recent",
-		MavenSpringlibs:  "https://maven.libraries.io/springLibsRelease/recent",
-		MavenJboss:       "https://maven.libraries.io/JBoss/recent",
-		MavenJbossEa:     "https://maven.libraries.io/JBossEa/recent",
+		MavenCentral: "https://maven.libraries.io/mavenCentral/recent",
 	}[ingestor.Repository]
 
 	return NewMavenParser(url, ingestor.Name())

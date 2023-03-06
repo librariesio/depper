@@ -72,6 +72,10 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 				DiscoveryLag: discoveryLag,
 			})
 	})
+	if err != nil {
+		// TODO: we can remove this log line once confirmed that the above one is working and more useful.
+		log.WithFields(log.Fields{"ingestor": "rubygems", "error": err}).Error()
+	}
 
 	return results
 }

@@ -52,6 +52,11 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 	body, _ := io.ReadAll(response.Body)
 
 	_, err = jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+		if err != nil {
+			log.WithFields(log.Fields{"ingestor": "rubygems", "error": err, "value": string(value), "dataType": dataType.String(), "offset": offset}).Error()
+			return
+		}
+
 		name, _ := jsonparser.GetString(value, "name")
 		version, _ := jsonparser.GetString(value, "version")
 		createdAt, _ := jsonparser.GetString(value, "version_created_at")
@@ -67,8 +72,8 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 				DiscoveryLag: discoveryLag,
 			})
 	})
-
 	if err != nil {
+		// TODO: we can remove this log line once confirmed that the above one is working and more useful.
 		log.WithFields(log.Fields{"ingestor": "rubygems", "error": err}).Error()
 	}
 

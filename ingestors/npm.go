@@ -51,12 +51,11 @@ func (ingestor *NPM) Name() string {
  * and add them to the processing queue. If no changes are available, we
  * reconnect to the database in a number of seconds and try again.
  *
- * Since this is based on detecting changes to the NPM database, it's possible
- * for the client, while disconnected for some reason, to miss out on a set
- * of changes. Since Libraries fully reprocesses a package when a new version
- * is placed on the Redis queue, that version will eventually be picked up, but
- * not until a new version is published or something else causes Libraries to
- * reprocess that package.
+ * Since this is based on detecting changes to the NPM database, it may be
+ * possible for a client to miss out on changes for some reason. Libraries only
+ * processes individual NPM versions delivered by depper, rather than reprocessing
+ * the whole package, so in that case, Libraries may not know about that version
+ * onless something triggers a full package resync on Libraries.
  */
 func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	since, err := getBookmark(ingestor, "now")

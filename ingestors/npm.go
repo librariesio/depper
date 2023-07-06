@@ -2,6 +2,7 @@ package ingestors
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -14,6 +15,7 @@ import (
 
 const NPMRegistryHostname = "https://replicate.npmjs.com"
 const NPMRegistryDatabase = "registry"
+const RetryDelaySeconds = 5
 
 type NPM struct {
 	couchClient *kivik.Client
@@ -38,6 +40,24 @@ func (ingestor *NPM) Name() string {
 	return "npm"
 }
 
+/**
+ * NPM package updates are ingested from a continuous reading of a remote
+ * CouchDB database at replicate.npmjs.com. CouchDB databases provide a Changes
+ * feed that provide the changes since the last set of changes were published:
+ * https://docs.couchbase.com/sync-gateway/current/changes-feed.html
+ *
+ * We connect to the CouchDB database and continually read for the next set
+ * of changes to the database. Once we receive changes, we take the found releases
+ * and add them to the processing queue. If no changes are available, we
+ * reconnect to the database in a number of seconds and try again.
+ *
+ * Since this is based on detecting changes to the NPM database, it's possible
+ * for the client, while disconnected for some reason, to miss out on a set
+ * of changes. Since Libraries fully reprocesses a package when a new version
+ * is placed on the Redis queue, that version will eventually be picked up, but
+ * not until a new version is published or something else causes Libraries to
+ * reprocess that package.
+ */
 func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	since, err := getBookmark(ingestor, "now")
 	if err != nil {
@@ -52,7 +72,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		// NB: previously with "timeout: 60000 * 2", we kept getting an internal error from npm, which surfaced as
 		// "stream error: stream ID 123; INTERNAL_ERROR". They showed up when there was no activity for 50 seconds,
 		// and we're not sure why. But setting a heartbeat ensures the connection stays open every 5 seconds via empty line.
-		"heartbeat": 5000,
+		"heartbeat": RetryDelaySeconds * 1000,
 	}
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
 	changes, err := couchDb.Changes(context.Background(), options)
@@ -93,8 +113,8 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 				}
 			}
 		} else {
-			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error("Reconnecting in 5 seconds.")
-			time.Sleep(5 * time.Second)
+			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error(fmt.Sprintf("Reconnecting in %d seconds.", RetryDelaySeconds))
+			time.Sleep(RetryDelaySeconds * time.Second)
 			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
 			changes, err = couchDb.Changes(context.Background(), options)
 			if err != nil {

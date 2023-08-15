@@ -13,7 +13,7 @@ import (
 )
 
 const elmSchedule = "0 */4 * * *"
-const elmFeed = "https://elm-greenwood.com/.rss"
+const elmFeed = "https://releases.elm.dmy.fr/.rss"
 
 type Elm struct {
 	LatestRun time.Time

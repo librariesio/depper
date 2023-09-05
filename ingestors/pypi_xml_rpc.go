@@ -84,7 +84,7 @@ func (response *PyPiXmlRpcResponse) GetPackageVersion() data.PackageVersion {
 }
 
 // Validate and then create a PyPiXmlRpcResponse from a log struct
-func createResponseStruct(log []interface{}) (*PyPiXmlRpcResponse, error) {
+func createResponseStruct(log []any) (*PyPiXmlRpcResponse, error) {
 	if _, ok := log[0].(string); !ok {
 		return nil, errors.New("package name is not a string")
 	}
@@ -112,7 +112,7 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 	// An array of interface arrays. Each log entry contains:
 	// * name(string), version(string), timestamp(int64), action(string)
 	// These are converted to PyPiXmlRpcResponse structs
-	var response [][]interface{}
+	var response [][]any
 	var results []data.PackageVersion
 
 	// Get the current bookmark
@@ -130,7 +130,7 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 			// If we encounter illegal characters in the XML, ignore this page and treat it like an empty response.
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Info(fmt.Sprintf("Skipping page from timestamp %d", since.Unix()))
-			response = [][]interface{}{}
+			response = [][]any{}
 		} else {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 		}

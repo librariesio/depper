@@ -66,15 +66,15 @@ func TestPyPiXmlRpcResponse_GetPackageVersion(t *testing.T) {
 }
 
 type logResponseTest struct {
-	log     []interface{}
+	log     []any
 	message string
 }
 
 var logResponsesFailures = []logResponseTest{
-	{[]interface{}{nil, "1.0.0", int64(100), "action"}, "package name is not a string"},
-	{[]interface{}{"name", nil, int64(100), "action"}, "version is not a string"},
-	{[]interface{}{"name", "1.0.0", nil, "action"}, "created at date is not an int64 number"},
-	{[]interface{}{"name", "1.0.0", int64(100), nil}, "action is not a string"},
+	{[]any{nil, "1.0.0", int64(100), "action"}, "package name is not a string"},
+	{[]any{"name", nil, int64(100), "action"}, "version is not a string"},
+	{[]any{"name", "1.0.0", nil, "action"}, "created at date is not an int64 number"},
+	{[]any{"name", "1.0.0", int64(100), nil}, "action is not a string"},
 }
 
 func TestCreateResponseStruct_Failure(t *testing.T) {
@@ -87,7 +87,7 @@ func TestCreateResponseStruct_Failure(t *testing.T) {
 }
 
 func TestCreateResponseStruct_Success(t *testing.T) {
-	response, err := createResponseStruct([]interface{}{"name", "1.0.0", int64(100), "action"})
+	response, err := createResponseStruct([]any{"name", "1.0.0", int64(100), "action"})
 
 	if err != nil {
 		t.Errorf("expected err to be nil, got %#v", err)

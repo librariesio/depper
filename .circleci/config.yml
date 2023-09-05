@@ -40,7 +40,7 @@ jobs:
           # Store the results of our tests in the $TEST_RESULTS directory
           command: |
             trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
-            go test -vet -v ./... | tee ${TEST_RESULTS}/go-test.out
+            go test -vet=all -v ./... | tee ${TEST_RESULTS}/go-test.out
 
       - save_cache:
           key: v1-gem-cache-{{ arch }}-{{ .Branch }}-{{ checksum "go.sum" }}

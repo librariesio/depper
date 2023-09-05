@@ -1,5 +1,17 @@
 package ingestors
 
+/*
+
+Load latest releases from the PyPI RSS feeds
+(https://warehouse.pypa.io/api-reference/feeds.html)
+and return ingestion results.
+
+The RSS feeds provide a combination of new releases for projects, and
+new packages added to PyPI. These feeds are checked regularly for updates,
+and found releases are returned as ingestion events.
+
+*/
+
 import (
 	"fmt"
 	"strings"
@@ -41,6 +53,19 @@ func (ingestor *PyPiRss) Ingest() []data.PackageVersion {
 	return packages
 }
 
+func createUpdateItemPackageVersion(item *gofeed.Item) data.PackageVersion {
+	nameAndVersion := strings.SplitN(item.Title, " ", 2)
+
+	return data.PackageVersion{
+		Platform:     "pypi",
+		Name:         nameAndVersion[0],
+		Version:      nameAndVersion[1],
+		CreatedAt:    *item.PublishedParsed,
+		DiscoveryLag: time.Since(*item.PublishedParsed),
+	}
+}
+
+// Retrieve the latest release updates
 func (ingestor *PyPiRss) getUpdates() []data.PackageVersion {
 	var results []data.PackageVersion
 
@@ -53,20 +78,13 @@ func (ingestor *PyPiRss) getUpdates() []data.PackageVersion {
 	}
 
 	for _, item := range feed.Items {
-		nameAndVersion := strings.SplitN(item.Title, " ", 2)
-		results = append(results,
-			data.PackageVersion{
-				Platform:     "pypi",
-				Name:         nameAndVersion[0],
-				Version:      nameAndVersion[1],
-				CreatedAt:    *item.PublishedParsed,
-				DiscoveryLag: time.Since(*item.PublishedParsed),
-			})
+		results = append(results, createUpdateItemPackageVersion(item))
 	}
 
 	return results
 }
 
+// Retrieve the latest new PyPI packages
 func (ingestor *PyPiRss) getNewPackages() []data.PackageVersion {
 	var results []data.PackageVersion
 

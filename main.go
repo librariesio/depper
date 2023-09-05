@@ -10,6 +10,7 @@ import (
 	"github.com/librariesio/depper/data"
 	"github.com/librariesio/depper/ingestors"
 	"github.com/librariesio/depper/publishers"
+	"github.com/librariesio/depper/redis"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus/hooks/writer"
 
@@ -28,6 +29,8 @@ type Depper struct {
 
 func main() {
 	setupLogger()
+	redis.Connect()
+
 	log.Info("Starting Depper")
 	depper := &Depper{
 		pipeline:      createPipeline(),

@@ -12,7 +12,8 @@ import (
 var Client *redis.Client
 var Nil = redis.Nil
 
-func init() {
+// Open a connection to Redis
+func Connect() {
 	address := "localhost:6379"
 	if envVal, envFound := os.LookupEnv("REDISCLOUD_URL"); envFound {
 		address = envVal

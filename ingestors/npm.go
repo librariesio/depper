@@ -9,7 +9,7 @@ import (
 
 	kivik "github.com/go-kivik/kivik/v4"
 
-	_ "github.com/go-kivik/couchdb/v4"
+	_ "github.com/go-kivik/kivik/v4/couchdb"
 	"github.com/librariesio/depper/data"
 )
 

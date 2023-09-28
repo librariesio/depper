@@ -74,8 +74,8 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		"heartbeat": RetryDelaySeconds * 1000,
 	})
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
-	changes, err := couchDb.Changes(context.Background(), options)
-	if err != nil {
+	changes := couchDb.Changes(context.Background(), options)
+	if err = changes.Err(); err != nil {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
 	defer changes.Close()
@@ -115,8 +115,8 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error(fmt.Sprintf("Reconnecting in %d seconds.", RetryDelaySeconds))
 			time.Sleep(RetryDelaySeconds * time.Second)
 			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
-			changes, err = couchDb.Changes(context.Background(), options)
-			if err != nil {
+			changes = couchDb.Changes(context.Background(), options)
+			if err = changes.Err(); err != nil {
 				log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 			}
 		}

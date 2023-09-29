@@ -63,16 +63,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
 
-	// See https://docs.couchdb.org/en/3.2.0/api/database/changes.html
-	options := kivik.Params(map[string]interface{}{
-		"feed":         "continuous",
-		"since":        since,
-		"include_docs": true,
-		// NB: previously with "timeout: 60000 * 2", we kept getting an internal error from npm, which surfaced as
-		// "stream error: stream ID 123; INTERNAL_ERROR". They showed up when there was no activity for 50 seconds,
-		// and we're not sure why. But setting a heartbeat ensures the connection stays open every 5 seconds via empty line.
-		"heartbeat": RetryDelaySeconds * 1000,
-	})
+	options := getOptionsForChangesFeed(since)
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
 	changes := couchDb.Changes(context.Background(), options)
 	if err = changes.Err(); err != nil {
@@ -107,7 +98,8 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 					CreatedAt:    latestTime,
 					DiscoveryLag: discoveryLag,
 				}
-				if _, err := setBookmark(ingestor, changes.Seq()); err != nil {
+				since = changes.Seq()
+				if _, err := setBookmark(ingestor, since); err != nil {
 					log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 				}
 			}
@@ -115,6 +107,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error(fmt.Sprintf("Reconnecting in %d seconds.", RetryDelaySeconds))
 			time.Sleep(RetryDelaySeconds * time.Second)
 			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
+			options := getOptionsForChangesFeed(since)
 			changes = couchDb.Changes(context.Background(), options)
 			if err = changes.Err(); err != nil {
 				log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
@@ -129,4 +122,18 @@ func getCouchClient() *kivik.Client {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
 	return kivikClient
+}
+
+// Get a list of querystring params for the _changes endpoint.
+// Docs: https://docs.couchdb.org/en/3.2.0/api/database/changes.html
+func getOptionsForChangesFeed(since string) kivik.Option {
+	return kivik.Params(map[string]interface{}{
+		"feed":         "continuous",
+		"since":        since,
+		"include_docs": true,
+		// NB: previously with "timeout: 60000 * 2", we kept getting an internal error from npm, which surfaced as
+		// "stream error: stream ID 123; INTERNAL_ERROR". They showed up when there was no activity for 50 seconds,
+		// and we're not sure why. But setting a heartbeat ensures the connection stays open every 5 seconds via empty line.
+		"heartbeat": RetryDelaySeconds * 1000,
+	})
 }

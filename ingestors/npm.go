@@ -9,7 +9,7 @@ import (
 
 	kivik "github.com/go-kivik/kivik/v4"
 
-	_ "github.com/go-kivik/couchdb/v4"
+	_ "github.com/go-kivik/kivik/v4/couchdb"
 	"github.com/librariesio/depper/data"
 )
 
@@ -64,7 +64,7 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	}
 
 	// See https://docs.couchdb.org/en/3.2.0/api/database/changes.html
-	options := kivik.Options{
+	options := kivik.Params(map[string]interface{}{
 		"feed":         "continuous",
 		"since":        since,
 		"include_docs": true,
@@ -72,10 +72,10 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 		// "stream error: stream ID 123; INTERNAL_ERROR". They showed up when there was no activity for 50 seconds,
 		// and we're not sure why. But setting a heartbeat ensures the connection stays open every 5 seconds via empty line.
 		"heartbeat": RetryDelaySeconds * 1000,
-	}
+	})
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
-	changes, err := couchDb.Changes(context.Background(), options)
-	if err != nil {
+	changes := couchDb.Changes(context.Background(), options)
+	if err = changes.Err(); err != nil {
 		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 	}
 	defer changes.Close()
@@ -115,8 +115,8 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error(fmt.Sprintf("Reconnecting in %d seconds.", RetryDelaySeconds))
 			time.Sleep(RetryDelaySeconds * time.Second)
 			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
-			changes, err = couchDb.Changes(context.Background(), options)
-			if err != nil {
+			changes = couchDb.Changes(context.Background(), options)
+			if err = changes.Err(); err != nil {
 				log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
 			}
 		}

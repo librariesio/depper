@@ -124,7 +124,7 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 	client, _ := xmlrpc.NewClient(pyPiRpcServer, nil)
 	defer client.Close()
 
-	err = client.Call("changelog", int(since.Unix()), &response)
+	err = client.Call("changelog_since_serial", int(since.Unix()), &response)
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "illegal character code") {
 			// If we encounter illegal characters in the XML, ignore this page and treat it like an empty response.

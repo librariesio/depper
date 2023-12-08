@@ -62,7 +62,7 @@ type PyPiXmlRpcResponse struct {
 // Return trhe if this response is an ingestable action
 func (response *PyPiXmlRpcResponse) IsIngestionAction() bool {
 	switch response.Action {
-	case "new release", "yank release", "remove release":
+	case "new release", "yank release", "remove release", "unyank release":
 		return true
 	}
 

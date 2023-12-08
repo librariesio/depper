@@ -6,15 +6,15 @@ Load latest releases from the PyPI XML-RPC endpoint
 (https://warehouse.pypa.io/api-reference/xml-rpc.html#changelog-since-with-ids-false)
 and return ingestion results.
 
-The XML-RPC endpoint is mostly deprecated. Methods that have to do with
-mirroring, like the "changelog" endpoint we're using, are still supported
-as of 2023-09-05.
+The XML-RPC endpoint is mostly deprecated. We previously used the "changelog" method,
+but it was deprecated so we switched to "changelog_since_serial" on 2023-12-08.
 
 This feed continually delivers new information on changes to the PyPI database.
 We're most concerned with actions that:
 
 * Add a release
 * Yank (remove from listings but still allow downloads) a release
+* Unyank (re-added to listings) a release
 * Remove (remove from listings and prevent downloads) a release
 
 Once we see one of these actions, we create an ingestion event for the release.
@@ -162,7 +162,7 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 		if strings.Contains(fmt.Sprint(err), "illegal character code") {
 			// If we encounter illegal characters in the XML, ignore this page and treat it like an empty response.
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
-			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Info(fmt.Sprintf("Skipping page from serial %s", serial))
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Info(fmt.Sprintf("Skipping page from serial %d", serial))
 			response = [][]any{}
 		} else {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)

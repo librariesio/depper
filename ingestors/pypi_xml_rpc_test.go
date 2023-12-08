@@ -13,6 +13,7 @@ type ingestionTest struct {
 var ingestionTests = []ingestionTest{
 	{"new release", true},
 	{"yank release", true},
+	{"unyank release", true},
 	{"remove release", true},
 	{"something else", false},
 }
@@ -20,7 +21,7 @@ var ingestionTests = []ingestionTest{
 func TestPyPiXmlRpcResponse_IsIngestionAction(t *testing.T) {
 	for _, test := range ingestionTests {
 		response := PyPiXmlRpcResponse{
-			"what", "ever", 1, test.action,
+			"what", "ever", 1, test.action, 1234,
 		}
 
 		if response.IsIngestionAction() != test.expected {
@@ -41,7 +42,7 @@ func TestPyPiXmlRpcResponse_GetPackageVersion(t *testing.T) {
 	fiveSecondsAgo := now.Add(fiveSecondsAgoDuration)
 
 	response := PyPiXmlRpcResponse{
-		"name", "version", fiveSecondsAgo.Unix(), "whatever",
+		"name", "version", fiveSecondsAgo.Unix(), "whatever", 1235,
 	}
 
 	packageVersion := response.GetPackageVersion()
@@ -71,10 +72,10 @@ type logResponseTest struct {
 }
 
 var logResponsesFailures = []logResponseTest{
-	{[]any{nil, "1.0.0", int64(100), "action"}, "package name is not a string"},
-	{[]any{"name", nil, int64(100), "action"}, "version is not a string"},
-	{[]any{"name", "1.0.0", nil, "action"}, "created at date is not an int64 number"},
-	{[]any{"name", "1.0.0", int64(100), nil}, "action is not a string"},
+	{[]any{nil, "1.0.0", int64(100), "action", 1000}, "package name is not a string"},
+	{[]any{"name", nil, int64(100), "action", 1001}, "version is not a string"},
+	{[]any{"name", "1.0.0", nil, "action", 1002}, "created at date is not an int64 number"},
+	{[]any{"name", "1.0.0", int64(100), nil, 1003}, "action is not a string"},
 }
 
 func TestCreateResponseStruct_Failure(t *testing.T) {
@@ -87,7 +88,7 @@ func TestCreateResponseStruct_Failure(t *testing.T) {
 }
 
 func TestCreateResponseStruct_Success(t *testing.T) {
-	response, err := createResponseStruct([]any{"name", "1.0.0", int64(100), "action"})
+	response, err := createResponseStruct([]any{"name", "1.0.0", int64(100), "action", int64(1000)})
 
 	if err != nil {
 		t.Errorf("expected err to be nil, got %#v", err)
@@ -107,5 +108,9 @@ func TestCreateResponseStruct_Success(t *testing.T) {
 
 	if response.Action != "action" {
 		t.Errorf("expected action to equal %s, got %s", "action", response.Action)
+	}
+
+	if response.Serial != 1000 {
+		t.Errorf("expected serial to equal %d, got %d", 1000, response.Serial)
 	}
 }

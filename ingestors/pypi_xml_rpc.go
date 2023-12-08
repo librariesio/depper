@@ -57,6 +57,7 @@ type PyPiXmlRpcResponse struct {
 	Version   string
 	Timestamp int64
 	Action    string
+	Serial    int64
 }
 
 // Return trhe if this response is an ingestable action
@@ -85,23 +86,31 @@ func (response *PyPiXmlRpcResponse) GetPackageVersion() data.PackageVersion {
 
 // Validate and then create a PyPiXmlRpcResponse from a log struct
 func createResponseStruct(log []any) (*PyPiXmlRpcResponse, error) {
-	if _, ok := log[0].(string); !ok {
+	var name, version, action string
+	var createdAt, serial int64
+	var ok bool
+
+	if name, ok = log[0].(string); !ok {
 		return nil, errors.New("package name is not a string")
 	}
 
-	if _, ok := log[1].(string); !ok {
+	if version, ok = log[1].(string); !ok {
 		return nil, errors.New("version is not a string")
 	}
 
-	if _, ok := log[2].(int64); !ok {
+	if createdAt, ok = log[2].(int64); !ok {
 		return nil, errors.New("created at date is not an int64 number")
 	}
 
-	if _, ok := log[3].(string); !ok {
+	if action, ok = log[3].(string); !ok {
 		return nil, errors.New("action is not a string")
 	}
 
-	return &PyPiXmlRpcResponse{log[0].(string), log[1].(string), log[2].(int64), log[3].(string)}, nil
+	if serial, ok = log[4].(int64); !ok {
+		return nil, errors.New("serial is not an int")
+	}
+
+	return &PyPiXmlRpcResponse{name, version, createdAt, action, serial}, nil
 }
 
 // Retrieve a list of [name, version, timestamp, action] since the given since. All since timestamps
@@ -110,7 +119,7 @@ func createResponseStruct(log []any) (*PyPiXmlRpcResponse, error) {
 // calls "changelog(since, with_ids=False)" RPC
 func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 	// An array of interface arrays. Each log entry contains:
-	// * name(string), version(string), timestamp(int64), action(string)
+	// * name(string), version(string), timestamp(int64), action(string), serial(int)
 	// These are converted to PyPiXmlRpcResponse structs
 	var response [][]any
 	var results []data.PackageVersion
@@ -136,17 +145,22 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 		}
 	}
 
-	for _, log := range response {
-		responseStruct, _ := createResponseStruct(log)
+	for _, changelogRow := range response {
+		// NOTE: we're swallowing the error here, because e.g. some rows won't have a "version" field
+		// and type-casting will fail. But the error can be useful for debugging when needed.
+		responseStruct, _ := createResponseStruct(changelogRow)
 
 		if responseStruct != nil {
 			if responseStruct.IsIngestionAction() {
 				results = append(results, responseStruct.GetPackageVersion())
+				if responseStruct.Serial > serial {
+					serial = responseStruct.Serial
+				}
 			}
 		}
 	}
 
-	if _, err := setBookmarkTime(ingestor, time.Now()); err != nil {
+	if _, err := setBookmark(ingestor, strconv.Itoa(int(serial))); err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 	}
 

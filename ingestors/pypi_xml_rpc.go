@@ -24,6 +24,7 @@ Once we see one of these actions, we create an ingestion event for the release.
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -125,20 +126,43 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 	var results []data.PackageVersion
 
 	// Get the current bookmark
-	since, err := getBookmarkTime(ingestor, time.Now().AddDate(0, 0, -1))
+	bookmark, err := getBookmark(ingestor, "")
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+	}
+
+	// Bookmark type migration: the old bookmarks were ISO8601 timestamps, which were 25 chars longs,
+	// but we're keeping the serial ints as bookmarks now, which are 8 chars long currently,
+	// so keep this around just to migrate the bookmark in redis. Safe to remove at some point in future.
+	var serial int64
+	if len(bookmark) > 20 {
+		serial = 0
+	} else {
+		serial, err = strconv.ParseInt(bookmark, 10, 64)
+		if err != nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(fmt.Sprintf("Couldn't convert bookmark to serial: %s", err))
+		}
 	}
 
 	client, _ := xmlrpc.NewClient(pyPiRpcServer, nil)
 	defer client.Close()
 
-	err = client.Call("changelog_since_serial", int(since.Unix()), &response)
+	if serial == 0 {
+		serial, err = getLastSerial(client)
+		if err != nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Info("Couldn't fetch last serial")
+		} else {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Info("Fetched default serial: ", serial)
+		}
+	}
+
+	err = client.Call("changelog_since_serial", serial, &response)
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "illegal character code") {
 			// If we encounter illegal characters in the XML, ignore this page and treat it like an empty response.
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
-			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Info(fmt.Sprintf("Skipping page from timestamp %d", since.Unix()))
+			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Info(fmt.Sprintf("Skipping page from serial %s", serial))
 			response = [][]any{}
 		} else {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
@@ -165,4 +189,15 @@ func (ingestor *PyPiXmlRpc) Ingest() []data.PackageVersion {
 	}
 
 	return results
+}
+
+// Serials for events from pypa are ints (e.g. 20972215).
+func getLastSerial(client *xmlrpc.Client) (int64, error) {
+	var serial int64
+	var args any
+	err := client.Call("changelog_last_serial", args, &serial)
+	if err != nil {
+		return 0, err
+	}
+	return serial, nil
 }

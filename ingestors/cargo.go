@@ -1,6 +1,7 @@
 package ingestors
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"time"
@@ -46,6 +47,24 @@ func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 	body, _ := io.ReadAll(response.Body)
 	err = jsonparser.ObjectEach(body, func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 		var subErr error
+
+		if string(key) == "errors" {
+			// there can be multiple errors returned based on the API response schema
+			// we can concatenate the messages together to return in a Go Error object but log them out individually
+			var totalErrorMessage = ""
+
+			_, subErr = jsonparser.ArrayEach(value, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+				errorMessage, _ := jsonparser.GetString(value, "detail")
+				totalErrorMessage += "|" + errorMessage
+				log.WithFields(log.Fields{"ingestor": "cargo", "error": errorMessage}).Error()
+			})
+
+			if subErr == nil {
+				subErr = errors.New(totalErrorMessage)
+			}
+
+		}
+
 		if string(key) == "just_updated" || string(key) == "new_crates" {
 			_, subErr = jsonparser.ArrayEach(value, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 				name, _ := jsonparser.GetString(value, "name")

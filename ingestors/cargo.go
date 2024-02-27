@@ -53,13 +53,16 @@ func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 			// we can concatenate the messages together to return in a Go Error object but log them out individually
 			var totalErrorMessage = ""
 
-			jsonparser.ArrayEach(value, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+			_, subErr = jsonparser.ArrayEach(value, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 				errorMessage, _ := jsonparser.GetString(value, "detail")
 				totalErrorMessage += "|" + errorMessage
 				log.WithFields(log.Fields{"ingestor": "cargo", "error": errorMessage}).Error()
 			})
 
-			subErr = errors.New(totalErrorMessage)
+			if subErr == nil {
+				subErr = errors.New(totalErrorMessage)
+			}
+
 		}
 
 		if string(key) == "just_updated" || string(key) == "new_crates" {

@@ -15,3 +15,7 @@
 # vendor/
 
 /depper
+.idea/workspace.xml
+.idea/vcs.xml
+.idea/GitLink.xml
+.idea/depper.iml

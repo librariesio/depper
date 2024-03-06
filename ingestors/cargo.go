@@ -42,7 +42,7 @@ func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 		log.WithFields(log.Fields{"ingestor": "cargo", "error": err}).Error()
 		return results
     }
-    req.Header.Set("User-Agent", "LibrariesDepper/1.0 (support@libraries.io)")
+    req.Header.Set("User-Agent", UserAgent)
     response, err := client.Do(req)
 
 	if err != nil {

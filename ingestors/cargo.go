@@ -36,7 +36,15 @@ func (ingestor *Cargo) Ingest() []data.PackageVersion {
 func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 	var results []data.PackageVersion
 
-	response, err := http.Get(url)
+    client := &http.Client{}
+    req, err := http.NewRequest("GET", url, nil)
+    if err != nil {
+		log.WithFields(log.Fields{"ingestor": "cargo", "error": err}).Error()
+		return results
+    }
+    req.Header.Set("User-Agent", "LibrariesDepper/1.0 (support@libraries.io)")
+    response, err := client.Do(req)
+
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "cargo", "error": err}).Error()
 		return results

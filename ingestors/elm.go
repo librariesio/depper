@@ -9,7 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/librariesio/depper/data"
-	"github.com/mmcdole/gofeed"
 )
 
 const elmSchedule = "0 */4 * * *"
@@ -36,9 +35,7 @@ func (ingestor *Elm) Ingest() []data.PackageVersion {
 func (ingestor *Elm) ingestURL(feedUrl string) []data.PackageVersion {
 	var results []data.PackageVersion
 
-	fp := gofeed.NewParser()
-
-	feed, err := fp.ParseURL(feedUrl)
+	feed, err := depperGetFeed(feedUrl)
 
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "elm"}).Error(err)

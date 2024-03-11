@@ -3,7 +3,6 @@ package ingestors
 import (
 	"fmt"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/buger/jsonparser"
@@ -27,7 +26,7 @@ func NewCondaParser(url string, platform string) *CondaParser {
 func (parser *CondaParser) GetPackages(lastRun time.Time) ([]data.PackageVersion, error) {
 	var results []data.PackageVersion
 	for _, arch := range architectures {
-		response, err := http.Get(fmt.Sprintf("%s/%s/repodata.json", parser.URL, arch))
+		response, err := depperGetUrl(fmt.Sprintf("%s/%s/repodata.json", parser.URL, arch))
 		if err != nil {
 			return results, err
 		}

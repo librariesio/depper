@@ -3,7 +3,6 @@ package ingestors
 import (
 	"encoding/json"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/librariesio/depper/data"
@@ -30,7 +29,7 @@ func NewMavenParser(url string, platform string) *MavenParser {
 func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 	var results []data.PackageVersion
 
-	response, err := http.Get(parser.URL)
+	response, err := depperGetUrl(parser.URL)
 	if err != nil {
 		return results, err
 	}

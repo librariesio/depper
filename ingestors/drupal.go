@@ -2,7 +2,6 @@ package ingestors
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/librariesio/depper/data"
-	"github.com/mmcdole/gofeed"
 )
 
 const drupalSchedule = "0 */4 * * *"
@@ -80,9 +78,8 @@ func (ingestor *Drupal) Ingest() []data.PackageVersion {
 
 func (ingestor *Drupal) getVersions(id string, bookmark time.Time) []data.PackageVersion {
 	var results []data.PackageVersion
-	fp := gofeed.NewParser()
 
-	feed, err := fp.ParseURL(fmt.Sprintf(drupalReleasesUrl, id))
+	feed, err := depperGetFeed(fmt.Sprintf(drupalReleasesUrl, id))
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
 		return results
@@ -108,7 +105,7 @@ func (ingestor *Drupal) getVersions(id string, bookmark time.Time) []data.Packag
 }
 
 func getHtmlDocument(url string) (*goquery.Document, error) {
-	res, err := http.Get(url)
+	res, err := depperGetUrl(url)
 	if err != nil {
 		return nil, err
 	}

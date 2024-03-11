@@ -3,7 +3,6 @@ package ingestors
 import (
 	"errors"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/buger/jsonparser"
@@ -36,15 +35,7 @@ func (ingestor *Cargo) Ingest() []data.PackageVersion {
 func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 	var results []data.PackageVersion
 
-    client := &http.Client{}
-    req, err := http.NewRequest("GET", url, nil)
-    if err != nil {
-		log.WithFields(log.Fields{"ingestor": "cargo", "error": err}).Error()
-		return results
-    }
-    req.Header.Set("User-Agent", UserAgent)
-    response, err := client.Do(req)
-
+	response, err := depperGetUrl(url)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "cargo", "error": err}).Error()
 		return results

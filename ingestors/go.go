@@ -3,7 +3,6 @@ package ingestors
 import (
 	"bufio"
 	"fmt"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -36,7 +35,7 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 
 	var results []data.PackageVersion
 
-	response, err := http.Get(url)
+	response, err := depperGetUrl(url)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "go", "error": err}).Error()
 		return results

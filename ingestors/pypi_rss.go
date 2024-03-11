@@ -69,9 +69,7 @@ func createUpdateItemPackageVersion(item *gofeed.Item) data.PackageVersion {
 func (ingestor *PyPiRss) getUpdates() []data.PackageVersion {
 	var results []data.PackageVersion
 
-	fp := gofeed.NewParser()
-
-	feed, err := fp.ParseURL(pyPiUpdatesFeedUrl)
+	feed, err := depperGetFeed(pyPiUpdatesFeedUrl)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
 		return results
@@ -94,10 +92,7 @@ func (ingestor *PyPiRss) getNewPackages() []data.PackageVersion {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 	}
 
-	fp := gofeed.NewParser()
-
-	// Get the packages feed
-	feed, err := fp.ParseURL(pyPiPackagesFeedUrl)
+	feed, err := depperGetFeed(pyPiPackagesFeedUrl)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
 		return results
@@ -127,9 +122,7 @@ func (ingestor *PyPiRss) getNewPackages() []data.PackageVersion {
 func (ingestor *PyPiRss) getReleases(packageName string) []data.PackageVersion {
 	var results []data.PackageVersion
 
-	fp := gofeed.NewParser()
-
-	feed, err := fp.ParseURL(fmt.Sprintf(pyPiReleasesFeedUrl, packageName))
+	feed, err := depperGetFeed(fmt.Sprintf(pyPiReleasesFeedUrl, packageName))
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
 		return results

@@ -3,7 +3,6 @@ package ingestors
 import (
 	"encoding/json"
 	"io"
-	"net/http"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -71,7 +70,7 @@ func (ingestor *Nuget) ingestURL(url string) []data.PackageVersion {
 func (ingestor *Nuget) getIndex(url string) ([]data.PackageVersion, error) {
 	var results []data.PackageVersion
 
-	response, err := http.Get(url)
+	response, err := depperGetUrl(url)
 	if err != nil {
 		return results, err
 	}
@@ -101,7 +100,7 @@ func (ingestor *Nuget) getIndex(url string) ([]data.PackageVersion, error) {
 func (ingestor *Nuget) getPage(url string) ([]data.PackageVersion, error) {
 	var results []data.PackageVersion
 
-	response, err := http.Get(url)
+	response, err := depperGetUrl(url)
 	if err != nil {
 		return []data.PackageVersion{}, err
 	}

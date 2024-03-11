@@ -2,7 +2,6 @@ package ingestors
 
 import (
 	"io"
-	"net/http"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -41,7 +40,7 @@ func (ingestor *RubyGems) Ingest() []data.PackageVersion {
 func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 	var results []data.PackageVersion
 
-	response, err := http.Get(url)
+	response, err := depperGetUrl(url)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": "rubygems", "error": err}).Error()
 		return results

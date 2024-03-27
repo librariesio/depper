@@ -22,9 +22,18 @@ import (
 const defaultTTL = 24 * time.Hour
 
 type Depper struct {
+	// Place onto which jobs are placed for Libraries.io to further examine a package manager's package
 	pipeline           *publishers.Pipeline
 	signalHandler      chan os.Signal
 	streamingIngestors []*ingestors.StreamingIngestor
+}
+
+func waitForExitSignal(signalHandler chan os.Signal) os.Signal {
+	signal.Notify(signalHandler, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-signalHandler
+	signal.Stop(signalHandler)
+
+	return sig
 }
 
 func main() {
@@ -38,9 +47,8 @@ func main() {
 	}
 	depper.registerIngestors()
 
-	signal.Notify(depper.signalHandler, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-depper.signalHandler
-	signal.Stop(depper.signalHandler)
+	sig := waitForExitSignal(depper.signalHandler)
+
 	log.WithFields(log.Fields{"signal": sig}).Info("Exiting")
 }
 
@@ -53,7 +61,6 @@ func createPipeline() *publishers.Pipeline {
 
 func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewRubyGems())
-	depper.registerIngestorStream(ingestors.NewNPM())
 	depper.registerIngestor(ingestors.NewElm())
 	depper.registerIngestor(ingestors.NewGo())
 	depper.registerIngestor(ingestors.NewMaven(ingestors.MavenCentral))
@@ -66,6 +73,8 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewPyPiXmlRpc())
 	depper.registerIngestor(ingestors.NewConda(ingestors.CondaForge))
 	depper.registerIngestor(ingestors.NewConda(ingestors.CondaMain))
+
+	depper.registerIngestorStream(ingestors.NewNPM())
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {

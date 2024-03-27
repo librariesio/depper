@@ -11,6 +11,11 @@ import (
 
 const maxQueueSize = 1000
 
+// Pipelines provide an interface for ingestors to place requests for
+// Libraries.io to retrieve more information about a release.
+// Typically, this is done via some sort of job queue like Sidekiq.
+// A worker in Libraries.io will pick up the update notification from
+// depper and request more information about the release.
 type Pipeline struct {
 	publishers      []Publisher
 	LastPublishedAt time.Time
@@ -24,6 +29,7 @@ func NewPipeline() *Pipeline {
 	return pipeline
 }
 
+// Add a job to the Libraries.io package processing queue
 func (pipeline *Pipeline) Publish(ttl time.Duration, packageVersion data.PackageVersion) {
 	pipeline.queue <- publishing{PackageVersion: packageVersion, ttl: ttl}
 }
@@ -41,8 +47,8 @@ func (pipeline *Pipeline) process(publishing publishing) {
 		return
 	}
 
+	// Publish each packageversion to all publishers
 	for _, publisher := range pipeline.publishers {
-		// Publish each packageversion to all publishers
 		publisher.Publish(publishing.PackageVersion)
 	}
 }
@@ -58,7 +64,6 @@ func (pipeline *Pipeline) shouldPublish(publishing publishing) bool {
 	return wasSet
 }
 
-// Registers a publisher on the pipeline
 func (pipeline *Pipeline) Register(publisher Publisher) {
 	pipeline.publishers = append(pipeline.publishers, publisher)
 }

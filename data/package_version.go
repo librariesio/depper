@@ -2,6 +2,8 @@ package data
 
 import "time"
 
+// The information necessary for Libraries.to to look up a project and
+// retrieve additional, package manager-specific information.
 type PackageVersion struct {
 	Platform     string
 	Name         string

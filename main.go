@@ -37,6 +37,11 @@ func waitForExitSignal(signalHandler chan os.Signal) os.Signal {
 }
 
 func main() {
+	defer func() {
+		// This defer will run when SIGINT is caught, but not for SIGKILL/SIGTERM/SIGHUP/SIGSTOP or os.Exit().
+		log.Info("Stopping Depper")
+	}()
+
 	setupLogger()
 	redis.Connect()
 

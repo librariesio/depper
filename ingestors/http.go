@@ -1,7 +1,9 @@
 package ingestors
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/mmcdole/gofeed"
 )
@@ -17,8 +19,11 @@ func depperGetUrl(url string) (*http.Response, error) {
 }
 
 func depperGetFeed(url string) (feed *gofeed.Feed, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	fp := gofeed.NewParser()
 	fp.UserAgent = UserAgent
 
-	return fp.ParseURL(url)
+	return fp.ParseURLWithContext(url, ctx)
 }

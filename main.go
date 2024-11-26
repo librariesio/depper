@@ -74,9 +74,13 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewCargo())
 	depper.registerIngestor(ingestors.NewNuget())
 	depper.registerIngestor(ingestors.NewPackagist())
-// drupal is returning a 403 as of 2024-05-06. need to investigate but let's
-// not block other ingestion as we do
-//	depper.registerIngestor(ingestors.NewDrupal())
+	depper.registerIngestor(ingestors.NewCPAN())
+	depper.registerIngestor(ingestors.NewHex())
+	depper.registerIngestor(ingestors.NewHackage())
+	depper.registerIngestor(ingestors.NewPub())
+	// drupal is returning a 403 as of 2024-05-06. need to investigate but let's
+	// not block other ingestion as we do
+	//	depper.registerIngestor(ingestors.NewDrupal())
 	depper.registerIngestor(ingestors.NewPyPiRss())
 	depper.registerIngestor(ingestors.NewPyPiXmlRpc())
 	depper.registerIngestor(ingestors.NewConda(ingestors.CondaForge))

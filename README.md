@@ -27,6 +27,14 @@ Depper has to know where to pick up once it restarts, so there are several metho
 
 `go test -v ./...`
 
+## Running the Linter
+
+You'll need the same version of our linter as CI, so reference the `".circleci/config.yml"` for the installation command.
+
+`golangci-lint run`: this will run the linter.
+
+`golangci-lint run --fix`: this will run the linter and autofix any autofix-able linter errors.
+
 ## Deploying
 
 1. merge PR into `main` branch

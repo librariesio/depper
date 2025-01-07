@@ -7,7 +7,6 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/mod/module"
 
 	"github.com/buger/jsonparser"
 	"github.com/librariesio/depper/data"
@@ -51,10 +50,15 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 		createdAt, _ := jsonparser.GetString(scanner.Bytes(), "Timestamp")
 		createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
 
+		// TODO: undoing this change from 2022 and monitoring it. Pseudoversions can
+		// be used legitimately by other packages, so let's monitor the traffic and
+		// see if it's not too noisy.
+		//
 		// Avoid publishing pseudo-versions, which are revisions for which no semver tag exists.
-		if module.IsPseudoVersion(version) {
-			continue
-		}
+		// if module.IsPseudoVersion(version) {
+		// 	continue
+		// }
+
 		discoveryLag := time.Since(createdAtTime)
 
 		results = append(results,

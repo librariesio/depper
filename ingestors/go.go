@@ -7,7 +7,6 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/mod/module"
 
 	"github.com/buger/jsonparser"
 	"github.com/librariesio/depper/data"
@@ -28,10 +27,23 @@ func (ingestor *Go) Schedule() string {
 	return goSchedule
 }
 
+func (ingestor *Go) Name() string {
+	return "go"
+}
+
 func (ingestor *Go) Ingest() []data.PackageVersion {
-	// Currently the index only shows the last <=2000 package version releases from the date given. (https://proxy.golang.org/)
-	oneDayAgo := url.QueryEscape(time.Now().AddDate(0, 0, -1).Format(time.RFC3339))
-	url := fmt.Sprintf("%s?since=%s&limit=2000", goIndexUrl, oneDayAgo)
+	bookmarkTime, err := getBookmarkTime(ingestor, time.Now().AddDate(0, 0, -1)) // fallback to 1 day ago
+	if err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Fatal()
+	}
+
+	// Currently the index only shows the last <=2000 package release from the
+	// date given. (https://proxy.golang.org/)
+	url := fmt.Sprintf(
+		"%s?since=%s&limit=2000",
+		goIndexUrl,
+		url.QueryEscape(bookmarkTime.Format(time.RFC3339)),
+	)
 
 	var results []data.PackageVersion
 
@@ -51,10 +63,15 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 		createdAt, _ := jsonparser.GetString(scanner.Bytes(), "Timestamp")
 		createdAtTime, _ := time.Parse(time.RFC3339, createdAt)
 
+		// TODO: undoing this change from 2022 and monitoring it. Pseudoversions can
+		// be used legitimately by other packages, so let's monitor the traffic and
+		// see if it's not too noisy.
+		//
 		// Avoid publishing pseudo-versions, which are revisions for which no semver tag exists.
-		if module.IsPseudoVersion(version) {
-			continue
-		}
+		// if module.IsPseudoVersion(version) {
+		// 	continue
+		// }
+
 		discoveryLag := time.Since(createdAtTime)
 
 		results = append(results,
@@ -65,7 +82,16 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 				CreatedAt:    createdAtTime,
 				DiscoveryLag: discoveryLag,
 			})
+
+		if createdAtTime.After(bookmarkTime) {
+			bookmarkTime = createdAtTime
+		}
 	}
+
+	if _, err := setBookmarkTime(ingestor, bookmarkTime); err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+	}
+
 	if err := scanner.Err(); err != nil {
 		log.WithFields(log.Fields{"ingestor": "go", "error": err}).Error()
 	}

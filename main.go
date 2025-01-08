@@ -17,6 +17,7 @@ import (
 	logrus_bugsnag "github.com/Shopify/logrus-bugsnag"
 	bugsnag "github.com/bugsnag/bugsnag-go"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 const defaultTTL = 24 * time.Hour
@@ -41,6 +42,11 @@ func main() {
 		// This defer will run when SIGINT is caught, but not for SIGKILL/SIGTERM/SIGHUP/SIGSTOP or os.Exit().
 		log.Info("Stopping Depper")
 	}()
+
+	if val := os.Getenv("DD_AGENT_HOST"); val != "" {
+		tracer.Start()
+		defer tracer.Stop()
+	}
 
 	setupLogger()
 	redis.Connect()

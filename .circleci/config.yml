@@ -21,9 +21,9 @@ jobs:
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - v1-go-cache-{{ arch }}-{{ .Branch }}-{{ checksum "go.mod" }}
-            - v1-go-cache-{{ arch }}-{{ .Branch }}-
-            - v1-go-cache-{{ arch }}-
+            - v2-go-sum-{{ arch }}-{{ .Branch }}-{{ checksum "go.mod" }}
+            - v2-go-sum-{{ arch }}-{{ .Branch }}-
+            - v2-go-sum-{{ arch }}-
 
       - run:
           command: go install github.com/jstemmer/go-junit-report@latest
@@ -43,7 +43,7 @@ jobs:
             go test -vet=all -v ./... | tee ${TEST_RESULTS}/go-test.out
 
       - save_cache:
-          key: v1-gem-cache-{{ arch }}-{{ .Branch }}-{{ checksum "go.sum" }}
+          key: v2-go-sum-{{ arch }}-{{ .Branch }}-{{ checksum "go.mod" }}
           paths:
             - "/go/pkg"
 

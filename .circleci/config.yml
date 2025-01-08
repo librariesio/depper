@@ -2,13 +2,12 @@ version: 2
 
 jobs:
   test:
+    working_directory: ~/depper
     docker:
       - image: cimg/go:1.23
     environment:
       TEST_RESULTS: /tmp/test-results # path to where test results will be saved
-
     steps:
-
       - add_ssh_keys:
           fingerprints:
             - "68:60:10:0e:85:95:01:71:df:12:e7:77:51:5b:9f:0c"
@@ -21,20 +20,22 @@ jobs:
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - v2-go-sum-{{ arch }}-{{ .Branch }}-{{ checksum "go.mod" }}
-            - v2-go-sum-{{ arch }}-{{ .Branch }}-
-            - v2-go-sum-{{ arch }}-
+            - v2-go-mod-{{ arch }}-{{ .Branch }}-{{ checksum "go.mod" }}
+            - v2-go-mod-{{ arch }}-{{ .Branch }}-
+            - v2-go-mod-{{ arch }}-
 
       - run:
           command: go install github.com/jstemmer/go-junit-report@latest
+
       - run:
           command: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.63.4
+
       - run:
           command: go get -v -t -d ./...
 
       - run:
           name: "Check lint errors"
-          command: golangci-lint run
+          command: golangci-lint run --timeout 2m
       - run:
           name: Run unit tests
           # Store the results of our tests in the $TEST_RESULTS directory
@@ -43,9 +44,9 @@ jobs:
             go test -vet=all -v ./... | tee ${TEST_RESULTS}/go-test.out
 
       - save_cache:
-          key: v2-go-sum-{{ arch }}-{{ .Branch }}-{{ checksum "go.mod" }}
+          key: v2-go-mod-{{ arch }}-{{ .Branch }}-{{ checksum "go.mod" }}
           paths:
-            - "/go/pkg"
+            - "~/go/pkg"
 
       - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
           path: /tmp/test-results

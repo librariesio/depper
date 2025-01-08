@@ -45,7 +45,7 @@ func main() {
 
 	if val := os.Getenv("DD_AGENT_HOST"); val != "" {
 		log.Info("Connecting to Datadog")
-		tracer.Start()
+		tracer.Start(tracer.WithService(os.Getenv("DD_SERVICE")))
 		defer tracer.Stop()
 	}
 

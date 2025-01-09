@@ -109,7 +109,13 @@ func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
 			ttl = ttler.TTL()
 		}
 
-		for _, packageVersion := range ingestor.Ingest() {
+		span := tracer.StartSpan("ingest")
+		// TODO: add ingestor name to span here
+		// span.SetTag(ingestor.Name())
+		packageVersions := ingestor.Ingest()
+		span.Finish()
+
+		for _, packageVersion := range packageVersions {
 			depper.pipeline.Publish(ttl, packageVersion)
 		}
 	}

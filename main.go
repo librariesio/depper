@@ -48,7 +48,7 @@ func main() {
 		tracer.Start(
 			tracer.WithService(os.Getenv("DD_SERVICE")),
 			// The DD agent already does sampling, but sampling on the client will help reduce overhead in Go.
-			tracer.WithSampler(tracer.NewRateSampler(0.1)),
+			// tracer.WithSampler(tracer.NewRateSampler(0.1)),
 		)
 		defer tracer.Stop()
 	}

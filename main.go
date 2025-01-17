@@ -114,9 +114,12 @@ func (depper *Depper) registerIngestor(ingestor ingestors.PollingIngestor) {
 		packageVersions := ingestor.Ingest()
 		span.Finish()
 
+		span = tracer.StartSpan("publish")
+		span.SetTag("ingestor", ingestor.Name())
 		for _, packageVersion := range packageVersions {
 			depper.pipeline.Publish(ttl, packageVersion)
 		}
+		span.Finish()
 	}
 
 	_, err := c.AddFunc(ingestor.Schedule(), ingestAndPublish)

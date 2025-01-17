@@ -110,8 +110,7 @@ func (depper *Depper) registerIngestor(ingestor ingestors.PollingIngestor) {
 		}
 
 		span := tracer.StartSpan("ingest")
-		// TODO: add ingestor name to span here
-		// span.SetTag(ingestor.Name())
+		span.SetTag("ingestor", ingestor.Name())
 		packageVersions := ingestor.Ingest()
 		span.Finish()
 

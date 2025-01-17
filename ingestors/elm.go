@@ -42,7 +42,7 @@ func (ingestor *Elm) ingestURL(feedUrl string) []data.PackageVersion {
 	feed, err := depperGetFeed(feedUrl)
 
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "elm"}).Error(err)
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Error(err)
 		return results
 	}
 	for _, item := range feed.Items {

@@ -41,7 +41,7 @@ func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 
 	response, err := depperGetUrl(url)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "cargo", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results
 	}
 
@@ -59,7 +59,7 @@ func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 			_, subErr = jsonparser.ArrayEach(value, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 				errorMessage, _ := jsonparser.GetString(value, "detail")
 				totalErrorMessage += "|" + errorMessage
-				log.WithFields(log.Fields{"ingestor": "cargo", "error": errorMessage}).Error()
+				log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": errorMessage}).Error()
 			})
 
 			if subErr == nil {
@@ -92,7 +92,7 @@ func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 	})
 
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "cargo", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 	}
 
 	return results

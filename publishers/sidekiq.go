@@ -35,7 +35,7 @@ func randomHex(n int) string {
 	id := make([]byte, n)
 	_, err := io.ReadFull(rand.Reader, id)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "npm", "error": err})
+		log.WithFields(log.Fields{"error": err})
 	}
 	return hex.EncodeToString(id)
 }

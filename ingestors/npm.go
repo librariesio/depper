@@ -60,14 +60,14 @@ func (ingestor *NPM) Name() string {
 func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	since, err := getBookmark(ingestor, "now")
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 	}
 
 	options := getOptionsForChangesFeed(since)
 	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
 	changes := couchDb.Changes(context.Background(), options)
 	if err = changes.Err(); err != nil {
-		log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
+		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 	}
 	defer changes.Close()
 
@@ -100,17 +100,17 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 				}
 				since = changes.Seq()
 				if _, err := setBookmark(ingestor, since); err != nil {
-					log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
+					log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 				}
 			}
 		} else {
-			log.WithFields(log.Fields{"ingestor": "npm", "error": changes.Err()}).Error(fmt.Sprintf("Reconnecting in %d seconds.", RetryDelaySeconds))
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": changes.Err()}).Error(fmt.Sprintf("Reconnecting in %d seconds.", RetryDelaySeconds))
 			time.Sleep(RetryDelaySeconds * time.Second)
 			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
 			options := getOptionsForChangesFeed(since)
 			changes = couchDb.Changes(context.Background(), options)
 			if err = changes.Err(); err != nil {
-				log.WithFields(log.Fields{"ingestor": "npm"}).Fatal(err)
+				log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
 			}
 		}
 	}

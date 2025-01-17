@@ -46,7 +46,7 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 
 	response, err := depperGetUrl(url)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "rubygems", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results
 	}
 
@@ -56,7 +56,15 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 
 	_, err = jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 		if err != nil {
-			log.WithFields(log.Fields{"ingestor": "rubygems", "error": err, "value": string(value), "dataType": dataType.String(), "offset": offset}).Error()
+			log.WithFields(
+				log.Fields{
+					"ingestor": ingestor.Name(),
+					"error":    err,
+					"value":    string(value),
+					"dataType": dataType.String(),
+					"offset":   offset,
+				},
+			).Error()
 			return
 		}
 
@@ -77,7 +85,7 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 	})
 	if err != nil {
 		// TODO: we can remove this log line once confirmed that the above one is working and more useful.
-		log.WithFields(log.Fields{"ingestor": "rubygems", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 	}
 
 	return results

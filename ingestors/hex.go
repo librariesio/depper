@@ -34,7 +34,7 @@ func (ingestor *Hex) Ingest() []data.PackageVersion {
 
 	response, err := depperGetUrl(hexPackagesUrl)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "hex", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results
 	}
 
@@ -46,7 +46,7 @@ func (ingestor *Hex) Ingest() []data.PackageVersion {
 		body,
 		func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 			if err != nil {
-				log.WithFields(log.Fields{"ingestor": "hex", "error": err, "value": string(value), "dataType": dataType.String(), "offset": offset}).Error()
+				log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err, "value": string(value), "dataType": dataType.String(), "offset": offset}).Error()
 				return
 			}
 			name, _ := jsonparser.GetString(value, "name")
@@ -66,7 +66,7 @@ func (ingestor *Hex) Ingest() []data.PackageVersion {
 		},
 	)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "hex", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 	}
 
 	ingestor.LatestRun = time.Now()

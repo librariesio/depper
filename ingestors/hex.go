@@ -13,23 +13,23 @@ import (
 const hexSchedule = "*/5 * * * *"
 const hexPackagesUrl = "https://hex.pm/api/packages?sort=updated_at"
 
-type hex struct {
+type Hex struct {
 	LatestRun time.Time
 }
 
-func NewHex() *hex {
-	return &hex{}
+func NewHex() *Hex {
+	return &Hex{}
 }
 
-func (ingestor *hex) Name() string {
+func (ingestor *Hex) Name() string {
 	return "hex"
 }
 
-func (ingestor *hex) Schedule() string {
+func (ingestor *Hex) Schedule() string {
 	return hexSchedule
 }
 
-func (ingestor *hex) Ingest() []data.PackageVersion {
+func (ingestor *Hex) Ingest() []data.PackageVersion {
 	var results []data.PackageVersion
 
 	response, err := depperGetUrl(hexPackagesUrl)

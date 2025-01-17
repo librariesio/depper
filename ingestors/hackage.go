@@ -12,29 +12,29 @@ import (
 const hackageSchedule = "*/5 * * * *"
 const hackageReleasesUrl = "https://hackage.haskell.org/packages/recent.rss"
 
-type hackage struct {
+type Hackage struct {
 	LatestRun time.Time
 }
 
-func NewHackage() *hackage {
-	return &hackage{}
+func NewHackage() *Hackage {
+	return &Hackage{}
 }
 
-func (ingestor *hackage) Name() string {
+func (ingestor *Hackage) Name() string {
 	return "hackage"
 }
 
-func (ingestor *hackage) Schedule() string {
+func (ingestor *Hackage) Schedule() string {
 	return hackageSchedule
 }
 
-func (ingestor *hackage) Ingest() []data.PackageVersion {
+func (ingestor *Hackage) Ingest() []data.PackageVersion {
 	packages := ingestor.ingestURL(hackageReleasesUrl)
 	ingestor.LatestRun = time.Now()
 	return packages
 }
 
-func (ingestor *hackage) ingestURL(feedUrl string) []data.PackageVersion {
+func (ingestor *Hackage) ingestURL(feedUrl string) []data.PackageVersion {
 	var results []data.PackageVersion
 
 	feed, err := depperGetFeed(feedUrl)

@@ -22,6 +22,10 @@ func NewCargo() *Cargo {
 	return &Cargo{}
 }
 
+func (ingestor *Cargo) Name() string {
+	return "cargo"
+}
+
 func (ingestor *Cargo) Schedule() string {
 	return cargoSchedule
 }

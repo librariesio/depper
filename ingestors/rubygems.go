@@ -22,6 +22,10 @@ func NewRubyGems() *RubyGems {
 	return &RubyGems{}
 }
 
+func (ingestor *RubyGems) Name() string {
+	return "rubygems"
+}
+
 func (ingestor *RubyGems) Schedule() string {
 	return rubyGemsSchedule
 }

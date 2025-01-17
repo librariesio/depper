@@ -6,9 +6,11 @@ Depper is an ingestor of package releases from multiple ecosystems (each ecosyst
 
 When new package releases are found, they are pushed to a shared redis queue for [Libraries.io](https://libraries.io) to process.
 
-## Ingestor Types
+## Types of Ingestors
 
-* `ingestors.Ingestor`: these are scheduled to ingest new versions at specific intervals (`ingestor.Schedule()`).
+Ingestors must satisfy one of these interfaces:
+
+* `ingestors.PollingIngestor`: these are scheduled to ingest new versions at specific intervals (`ingestor.Schedule()`).
 * `ingestors.StreamingIngestor`: these are always running in a goroutine, ingesting new releases via a channel
 
 ## Ingestor Cursor Patterns

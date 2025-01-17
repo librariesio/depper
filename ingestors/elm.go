@@ -22,6 +22,10 @@ func NewElm() *Elm {
 	return &Elm{}
 }
 
+func (ingestor *Elm) Name() string {
+	return "elm"
+}
+
 func (ingestor *Elm) Schedule() string {
 	return elmSchedule
 }

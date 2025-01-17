@@ -21,6 +21,10 @@ func NewHex() *hex {
 	return &hex{}
 }
 
+func (ingestor *hex) Name() string {
+	return "hex"
+}
+
 func (ingestor *hex) Schedule() string {
 	return hexSchedule
 }

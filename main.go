@@ -100,7 +100,7 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestorStream(ingestors.NewNPM())
 }
 
-func (depper *Depper) registerIngestor(ingestor ingestors.Ingestor) {
+func (depper *Depper) registerIngestor(ingestor ingestors.PollingIngestor) {
 	c := cron.New()
 	ingestAndPublish := func() {
 		ttl := defaultTTL

@@ -42,6 +42,10 @@ func NewNuget() *Nuget {
 	return &Nuget{}
 }
 
+func (ingestor *Nuget) Name() string {
+	return "nuget"
+}
+
 func (ingestor *Nuget) Schedule() string {
 	return nugetSchedule
 }

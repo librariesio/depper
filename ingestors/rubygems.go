@@ -54,7 +54,7 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 
 	body, _ := io.ReadAll(response.Body)
 
-	_, err = jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
+	_, _ = jsonparser.ArrayEach(body, func(value []byte, dataType jsonparser.ValueType, offset int, err error) {
 		if err != nil {
 			log.WithFields(
 				log.Fields{
@@ -83,10 +83,6 @@ func (ingestor *RubyGems) ingestURL(url string) []data.PackageVersion {
 				DiscoveryLag: discoveryLag,
 			})
 	})
-	if err != nil {
-		// TODO: we can remove this log line once confirmed that the above one is working and more useful.
-		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
-	}
 
 	return results
 }

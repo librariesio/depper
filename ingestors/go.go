@@ -49,7 +49,7 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 
 	response, err := depperGetUrl(url)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "go", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results
 	}
 
@@ -93,7 +93,7 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.WithFields(log.Fields{"ingestor": "go", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 	}
 
 	ingestor.LatestRun = time.Now()

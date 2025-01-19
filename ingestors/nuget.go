@@ -42,6 +42,10 @@ func NewNuget() *Nuget {
 	return &Nuget{}
 }
 
+func (ingestor *Nuget) Name() string {
+	return "nuget"
+}
+
 func (ingestor *Nuget) Schedule() string {
 	return nugetSchedule
 }
@@ -61,7 +65,7 @@ func (ingestor *Nuget) ingestURL(url string) []data.PackageVersion {
 
 	results, err := ingestor.getIndex(url)
 	if err != nil {
-		log.WithFields(log.Fields{"ingestor": "nuget", "error": err}).Error()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 	}
 
 	return results

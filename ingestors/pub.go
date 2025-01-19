@@ -12,29 +12,29 @@ import (
 const pubSchedule = "*/5 * * * *"
 const pubReleasesUrl = "https://pub.dartlang.org/feed.atom"
 
-type pub struct {
+type Pub struct {
 	LatestRun time.Time
 }
 
-func NewPub() *pub {
-	return &pub{}
+func NewPub() *Pub {
+	return &Pub{}
 }
 
-func (ingestor *pub) Name() string {
+func (ingestor *Pub) Name() string {
 	return "pub"
 }
 
-func (ingestor *pub) Schedule() string {
+func (ingestor *Pub) Schedule() string {
 	return pubSchedule
 }
 
-func (ingestor *pub) Ingest() []data.PackageVersion {
+func (ingestor *Pub) Ingest() []data.PackageVersion {
 	packages := ingestor.ingestURL(pubReleasesUrl)
 	ingestor.LatestRun = time.Now()
 	return packages
 }
 
-func (ingestor *pub) ingestURL(feedUrl string) []data.PackageVersion {
+func (ingestor *Pub) ingestURL(feedUrl string) []data.PackageVersion {
 	var results []data.PackageVersion
 
 	feed, err := depperGetFeed(feedUrl)

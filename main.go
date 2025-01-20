@@ -103,23 +103,25 @@ func (depper *Depper) registerIngestors() {
 func (depper *Depper) registerIngestor(ingestor ingestors.PollingIngestor) {
 	c := cron.New()
 	ingestAndPublish := func() {
+		span := tracer.StartSpan("ingest_and_publish")
+		span.SetTag("ingestor", ingestor.Name())
+		defer span.Finish()
+
 		ttl := defaultTTL
 
 		if ttler, ok := ingestor.(ingestors.TTLer); ok {
 			ttl = ttler.TTL()
 		}
 
-		span := tracer.StartSpan("ingest")
-		span.SetTag("ingestor", ingestor.Name())
+		ingestSpan := tracer.StartSpan("ingest", tracer.ChildOf(span.Context()))
 		packageVersions := ingestor.Ingest()
-		span.Finish()
+		ingestSpan.Finish()
 
-		span = tracer.StartSpan("publish")
-		span.SetTag("ingestor", ingestor.Name())
+		publishSpan := tracer.StartSpan("publish", tracer.ChildOf(span.Context()))
 		for _, packageVersion := range packageVersions {
 			depper.pipeline.Publish(ttl, packageVersion)
 		}
-		span.Finish()
+		publishSpan.Finish()
 	}
 
 	_, err := c.AddFunc(ingestor.Schedule(), ingestAndPublish)

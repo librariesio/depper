@@ -15,7 +15,12 @@ import (
 
 const NPMRegistryHostname = "https://replicate.npmjs.com"
 const NPMRegistryDatabase = "registry"
-const RetryDelaySeconds = 5
+
+// Delay between attempts at initial connection to Changes() feed
+const ConnectRetryDelaySeconds = 60 * 5
+
+// Delay between attemps to fix broken connection to Changes() feed
+const ReconnectRetryDelaySeconds = 5
 
 type NPM struct {
 	couchClient *kivik.Client
@@ -64,12 +69,23 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	}
 
 	options := getOptionsForChangesFeed(since)
-	couchDb := ingestor.couchClient.DB(NPMRegistryDatabase)
-	changes := couchDb.Changes(context.Background(), options)
-	if err = changes.Err(); err != nil {
-		log.WithFields(log.Fields{"ingestor": ingestor.Name()}).Fatal(err)
+	var changes *kivik.Changes
+	var couchDb *kivik.DB
+
+	for {
+		couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
+		changes = couchDb.Changes(context.Background(), options)
+		if err = changes.Err(); err != nil {
+			// If Changes() failed (e.g. NPM returns 503), then wait and try again.
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).
+				Error(fmt.Sprintf("NPM unavailable, retrying in %d seconds.", ConnectRetryDelaySeconds))
+			time.Sleep(ConnectRetryDelaySeconds * time.Second)
+		} else {
+			// If Changes() succeeded, continue on.
+			defer changes.Close()
+			break
+		}
 	}
-	defer changes.Close()
 
 	for {
 		if changes.Next() {
@@ -104,8 +120,8 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 				}
 			}
 		} else {
-			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": changes.Err()}).Error(fmt.Sprintf("Reconnecting in %d seconds.", RetryDelaySeconds))
-			time.Sleep(RetryDelaySeconds * time.Second)
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": changes.Err()}).Error(fmt.Sprintf("Reconnecting in %d seconds.", ReconnectRetryDelaySeconds))
+			time.Sleep(ReconnectRetryDelaySeconds * time.Second)
 			couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
 			options := getOptionsForChangesFeed(since)
 			changes = couchDb.Changes(context.Background(), options)
@@ -134,6 +150,6 @@ func getOptionsForChangesFeed(since string) kivik.Option {
 		// NB: previously with "timeout: 60000 * 2", we kept getting an internal error from npm, which surfaced as
 		// "stream error: stream ID 123; INTERNAL_ERROR". They showed up when there was no activity for 50 seconds,
 		// and we're not sure why. But setting a heartbeat ensures the connection stays open every 5 seconds via empty line.
-		"heartbeat": RetryDelaySeconds * 1000,
+		"heartbeat": ReconnectRetryDelaySeconds * 1000,
 	})
 }

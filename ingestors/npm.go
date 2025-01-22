@@ -75,14 +75,13 @@ func (ingestor *NPM) Ingest(results chan data.PackageVersion) {
 	for {
 		couchDb = ingestor.couchClient.DB(NPMRegistryDatabase)
 		changes = couchDb.Changes(context.Background(), options)
+		defer changes.Close()
 		if err = changes.Err(); err != nil {
 			// If Changes() failed (e.g. NPM returns 503), then wait and try again.
-			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).
-				Error(fmt.Sprintf("NPM unavailable, retrying in %d seconds.", ConnectRetryDelaySeconds))
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error(fmt.Sprintf("NPM unavailable, retrying in %d seconds.", ConnectRetryDelaySeconds))
 			time.Sleep(ConnectRetryDelaySeconds * time.Second)
 		} else {
 			// If Changes() succeeded, continue on.
-			defer changes.Close()
 			break
 		}
 	}

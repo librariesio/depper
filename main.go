@@ -76,7 +76,7 @@ func createPipeline() *publishers.Pipeline {
 }
 
 func (depper *Depper) registerIngestors() {
-	depper.registerIngestor(ingestors.NewCocoaPods())
+//	depper.registerIngestor(ingestors.NewCocoaPods())
 	depper.registerIngestor(ingestors.NewRubyGems())
 	depper.registerIngestor(ingestors.NewElm())
 	depper.registerIngestor(ingestors.NewGo())

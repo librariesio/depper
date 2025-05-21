@@ -21,7 +21,7 @@ const perPage = 10000
 
 // Current limit is 1 page per run, but if we need to do a backfill or catch up
 // we could increase this to > 1 pages.
-const maxResultsLength = 10000
+const pages = 1
 
 type NPM struct {
 }
@@ -42,9 +42,9 @@ func (ingestor *NPM) Ingest() []data.PackageVersion {
 	currentSequence := ingestor.getCurrentSequence()
 
 	var results []data.PackageVersion
-	for {
+	for page := 0; page < pages; page++ {
 		lastSequence, lastResults := ingestor.getPage(currentSequence)
-		if len(lastResults) == 0 || len(results) > maxResultsLength {
+		if len(lastResults) == 0 {
 			break
 		}
 		results = append(results, lastResults...)

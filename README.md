@@ -13,8 +13,8 @@ schedules ingestion of new versions at specific intervals (`ingestor.Schedule()`
 
 ## Throttling + the TTLer interface
 
-By default a unique `PackageVersion` will get limited to one published event per "ttl", which defaults to 24 hours.
-This duration can be overridden by implementing the TTLer interface in the ingestor.
+By default a `PackageVersion` -- unique by `Platform`/`Name`/`Version` -- will be limited to one published event per "ttl",
+which defaults to 24 hours. This duration can be overridden by implementing the TTLer interface in the ingestor.
 
 ## Ingestor Cursor Patterns
 

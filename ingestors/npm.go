@@ -12,16 +12,13 @@ import (
 )
 
 const npmSchedule = "*/5 * * * *"
-const npmIndexUrl = "https://replicate.npmjs.com/registry/_changes"
-
-// Arbitrary sequence number from 5/20/2025, just to make sure we
-// don't fallback to "0". Via https://replicate.npmjs.com/registry/.
-const fallbackSequence = 42540679
-const perPage = 10000
+const npmIndexUrl = "https://replicate.npmjs.com/registry"
+const npmChangesUrl = npmIndexUrl + "/_changes"
 
 // Current limit is 1 page per run, but if we need to do a backfill or catch up
 // we could increase this to > 1 pages.
 const pages = 1
+const perPage = 10000
 
 type NPM struct {
 }
@@ -67,7 +64,7 @@ func (ingestor *NPM) getPage(sequence int64) (int64, []data.PackageVersion) {
 	// The header enables the new API changes and can be removed May 29th, 2025:
 	// https://github.blog/changelog/2025-02-27-changes-and-deprecation-notice-for-npm-replication-apis/
 	response, err := depperGetUrlWithHeaders(
-		fmt.Sprintf("%s?since=%d&limit=%d", npmIndexUrl, sequence, perPage),
+		fmt.Sprintf("%s?since=%d&limit=%d", npmChangesUrl, sequence, perPage),
 		map[string]string{"npm-replication-opt-in": "true"},
 	)
 	if err != nil {
@@ -109,9 +106,25 @@ func (ingestor *NPM) getCurrentSequence() int64 {
 	if bookmark != "" {
 		currentSequence, _ = strconv.ParseInt(bookmark, 10, 64)
 	} else if currentSequence == 0 {
-		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "msg": fmt.Sprintf("No NPM bookmark saved, falling back to default sequence %d", fallbackSequence)}).Info()
-		currentSequence = fallbackSequence
+		currentSequence = ingestor.getLatestSequence()
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "msg": fmt.Sprintf("No NPM bookmark saved, using latest published sequence %d", currentSequence)}).Info()
 	}
 
 	return currentSequence
+}
+
+// As a fallback, fetch the latest published sequence from https://replicate.npmjs.com/registry/.
+func (ingestor *NPM) getLatestSequence() int64 {
+	response, err := depperGetUrl(npmIndexUrl)
+	if err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Fatal()
+	}
+	defer response.Body.Close()
+	body, _ := io.ReadAll(response.Body)
+	latestSequence, err := jsonparser.GetInt(body, "update_seq")
+	if err != nil {
+		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Fatal()
+	}
+
+	return latestSequence
 }

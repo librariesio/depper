@@ -11,10 +11,10 @@ When new package releases are found, they are pushed to a shared redis queue for
 Ingestors must satisfy the `ingestors.PollingIngestor` interface. It is currently our only ingestor interface, and
 schedules ingestion of new versions at specific intervals (`ingestor.Schedule()`).
 
-## TTLer interface
+## Throttling + the TTLer interface
 
-By default a unique `PackageVersion` will get limited to one published event per 24 hours. This duration can be overridden by
-implementing the TTLer interface.
+By default a unique `PackageVersion` will get limited to one published event per "ttl", which defaults to 24 hours.
+This duration can be overridden by implementing the TTLer interface in the ingestor.
 
 ## Ingestor Cursor Patterns
 

@@ -10,6 +10,7 @@ type PackageVersion struct {
 	Version      string
 	CreatedAt    time.Time
 	DiscoveryLag time.Duration // (time of depper discovery) - (creation time, as reported by repository)
+	Sequence     string        // arbitrary field for tracking the order of events and debugging
 }
 
 func MaxCreatedAt(packageVersions []PackageVersion) time.Time {

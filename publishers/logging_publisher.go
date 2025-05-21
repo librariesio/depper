@@ -9,13 +9,20 @@ import (
 type LoggingPublisher struct{}
 
 func (publisher *LoggingPublisher) Publish(packageVersion data.PackageVersion) {
+	field := log.Fields{
+		"platform":     packageVersion.Platform,
+		"name":         packageVersion.Name,
+		"version":      packageVersion.Version,
+		"created":      packageVersion.CreatedAt,
+		"discoveryLag": packageVersion.DiscoveryLag.Milliseconds(),
+		"sequence":     packageVersion.Sequence,
+	}
+
+	if packageVersion.Sequence != "" {
+		field["sequence"] = packageVersion.Sequence
+	}
+
 	log.
-		WithFields(log.Fields{
-			"platform":     packageVersion.Platform,
-			"name":         packageVersion.Name,
-			"version":      packageVersion.Version,
-			"created":      packageVersion.CreatedAt,
-			"discoveryLag": packageVersion.DiscoveryLag.Milliseconds(),
-		}).
+		WithFields(field).
 		Info("Depper publish")
 }

@@ -26,7 +26,7 @@ func NewCondaParser(url string, platform string) *CondaParser {
 func (parser *CondaParser) GetPackages(lastRun time.Time) ([]data.PackageVersion, error) {
 	var results []data.PackageVersion
 	for _, arch := range architectures {
-		response, err := depperGetUrl(fmt.Sprintf("%s/%s/repodata.json", parser.URL, arch), map[string]string{})
+		response, err := depperGetUrl(fmt.Sprintf("%s/%s/repodata.json", parser.URL, arch))
 		if err != nil {
 			return results, err
 		}

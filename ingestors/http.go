@@ -8,7 +8,11 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-func depperGetUrl(url string, headers map[string]string) (*http.Response, error) {
+func depperGetUrl(url string) (*http.Response, error) {
+	return depperGetUrlWithHeaders(url, map[string]string{})
+}
+
+func depperGetUrlWithHeaders(url string, headers map[string]string) (*http.Response, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

@@ -74,7 +74,7 @@ func (ingestor *Nuget) ingestURL(url string) []data.PackageVersion {
 func (ingestor *Nuget) getIndex(url string) ([]data.PackageVersion, error) {
 	var results []data.PackageVersion
 
-	response, err := depperGetUrl(url, map[string]string{})
+	response, err := depperGetUrl(url)
 	if err != nil {
 		return results, err
 	}
@@ -104,7 +104,7 @@ func (ingestor *Nuget) getIndex(url string) ([]data.PackageVersion, error) {
 func (ingestor *Nuget) getPage(url string) ([]data.PackageVersion, error) {
 	var results []data.PackageVersion
 
-	response, err := depperGetUrl(url, map[string]string{})
+	response, err := depperGetUrl(url)
 	if err != nil {
 		return []data.PackageVersion{}, err
 	}

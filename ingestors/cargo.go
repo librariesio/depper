@@ -39,7 +39,7 @@ func (ingestor *Cargo) Ingest() []data.PackageVersion {
 func (ingestor *Cargo) ingestURL(url string) []data.PackageVersion {
 	var results []data.PackageVersion
 
-	response, err := depperGetUrl(url, map[string]string{})
+	response, err := depperGetUrl(url)
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results

@@ -65,7 +65,7 @@ func (ingestor *NPM) getPage(sequence int64) (int64, []data.PackageVersion) {
 
 	// The header enables the new API changes and can be removed May 29th, 2025:
 	// https://github.blog/changelog/2025-02-27-changes-and-deprecation-notice-for-npm-replication-apis/
-	response, err := depperGetUrl(
+	response, err := depperGetUrlWithHeaders(
 		fmt.Sprintf("%s?since=%d&limit=%d", npmIndexUrl, sequence, perPage),
 		map[string]string{"npm-replication-opt-in": "true"},
 	)

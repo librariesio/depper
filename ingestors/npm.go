@@ -11,7 +11,7 @@ import (
 	"github.com/librariesio/depper/data"
 )
 
-const npmSchedule = "1-59 * * * *"
+const npmSchedule = "*/5 * * * *"
 const npmIndexUrl = "https://replicate.npmjs.com/registry/_changes"
 
 // Arbitrary sequence number from 5/20/2025, just to make sure we

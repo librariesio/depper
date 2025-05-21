@@ -96,8 +96,7 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewPyPiXmlRpc())
 	depper.registerIngestor(ingestors.NewConda(ingestors.CondaForge))
 	depper.registerIngestor(ingestors.NewConda(ingestors.CondaMain))
-
-	depper.registerIngestorStream(ingestors.NewNPM())
+	depper.registerIngestor(ingestors.NewNPM())
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.PollingIngestor) {

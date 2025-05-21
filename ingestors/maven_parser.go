@@ -29,7 +29,7 @@ func NewMavenParser(url string, platform string) *MavenParser {
 func (parser *MavenParser) GetPackages() ([]data.PackageVersion, error) {
 	var results []data.PackageVersion
 
-	response, err := depperGetUrl(parser.URL)
+	response, err := depperGetUrl(parser.URL, map[string]string{})
 	if err != nil {
 		return results, err
 	}

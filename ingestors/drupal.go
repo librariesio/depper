@@ -105,7 +105,7 @@ func (ingestor *Drupal) getVersions(id string, bookmark time.Time) []data.Packag
 }
 
 func getHtmlDocument(url string) (*goquery.Document, error) {
-	res, err := depperGetUrl(url)
+	res, err := depperGetUrl(url, map[string]string{})
 	if err != nil {
 		return nil, err
 	}

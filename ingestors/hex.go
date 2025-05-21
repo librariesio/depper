@@ -32,7 +32,7 @@ func (ingestor *Hex) Schedule() string {
 func (ingestor *Hex) Ingest() []data.PackageVersion {
 	var results []data.PackageVersion
 
-	response, err := depperGetUrl(hexPackagesUrl)
+	response, err := depperGetUrl(hexPackagesUrl, map[string]string{})
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results

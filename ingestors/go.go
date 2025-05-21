@@ -47,7 +47,7 @@ func (ingestor *Go) Ingest() []data.PackageVersion {
 
 	var results []data.PackageVersion
 
-	response, err := depperGetUrl(url)
+	response, err := depperGetUrl(url, map[string]string{})
 	if err != nil {
 		log.WithFields(log.Fields{"ingestor": ingestor.Name(), "error": err}).Error()
 		return results

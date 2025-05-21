@@ -19,8 +19,9 @@ const npmIndexUrl = "https://replicate.npmjs.com/registry/_changes"
 const fallbackSequence = 42540679
 const perPage = 10000
 
-// Limit number of pages per run in case we hit a bad sequence number / backfill.
-const maxResultsLength = 100000
+// Current limit is 1 page per run, but if we need to do a backfill or catch up
+// we could increase this to > 1 pages.
+const maxResultsLength = 10000
 
 type NPM struct {
 }

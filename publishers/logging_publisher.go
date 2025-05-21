@@ -15,7 +15,6 @@ func (publisher *LoggingPublisher) Publish(packageVersion data.PackageVersion) {
 		"version":      packageVersion.Version,
 		"created":      packageVersion.CreatedAt,
 		"discoveryLag": packageVersion.DiscoveryLag.Milliseconds(),
-		"sequence":     packageVersion.Sequence,
 	}
 
 	if packageVersion.Sequence != "" {

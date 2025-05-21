@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 
 	"github.com/buger/jsonparser"
 	log "github.com/sirupsen/logrus"
@@ -19,6 +20,15 @@ const npmChangesUrl = npmIndexUrl + "/_changes"
 // we could increase this to > 1 pages.
 const pages = 1
 const perPage = 10000
+
+// 1 hour TTL, since we only have Platform/Name and no Version. Throttle
+// big floods of versions from a single package, but also allow for
+// some updates every hour.
+const npmTTL = 1 * time.Hour
+
+func (ingestor *NPM) TTL() time.Duration {
+	return npmTTL
+}
 
 type NPM struct {
 }

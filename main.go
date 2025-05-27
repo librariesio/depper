@@ -7,7 +7,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/librariesio/depper/data"
 	"github.com/librariesio/depper/ingestors"
 	"github.com/librariesio/depper/publishers"
 	"github.com/librariesio/depper/redis"
@@ -24,9 +23,8 @@ const defaultTTL = 24 * time.Hour
 
 type Depper struct {
 	// Place onto which jobs are placed for Libraries.io to further examine a package manager's package
-	pipeline           *publishers.Pipeline
-	signalHandler      chan os.Signal
-	streamingIngestors []*ingestors.StreamingIngestor
+	pipeline      *publishers.Pipeline
+	signalHandler chan os.Signal
 }
 
 func waitForExitSignal(signalHandler chan os.Signal) os.Signal {
@@ -96,8 +94,7 @@ func (depper *Depper) registerIngestors() {
 	depper.registerIngestor(ingestors.NewPyPiXmlRpc())
 	depper.registerIngestor(ingestors.NewConda(ingestors.CondaForge))
 	depper.registerIngestor(ingestors.NewConda(ingestors.CondaMain))
-
-	depper.registerIngestorStream(ingestors.NewNPM())
+	depper.registerIngestor(ingestors.NewNPM())
 }
 
 func (depper *Depper) registerIngestor(ingestor ingestors.PollingIngestor) {
@@ -133,21 +130,6 @@ func (depper *Depper) registerIngestor(ingestor ingestors.PollingIngestor) {
 
 	// For now we'll run once upon registration
 	ingestAndPublish()
-}
-
-func (depper *Depper) registerIngestorStream(ingestor ingestors.StreamingIngestor) {
-	depper.streamingIngestors = append(depper.streamingIngestors, &ingestor)
-
-	// Unbuffered channel so that the StreamingIngestor will block while pulling
-	// next updates until Publish() has grabbed the last one.
-	packageVersions := make(chan data.PackageVersion)
-
-	go ingestor.Ingest(packageVersions)
-	go func() {
-		for packageVersion := range packageVersions {
-			depper.pipeline.Publish(defaultTTL, packageVersion)
-		}
-	}()
 }
 
 func setupLogger() {

@@ -6,20 +6,23 @@ Depper is an ingestor of package releases from multiple ecosystems (each ecosyst
 
 When new package releases are found, they are pushed to a shared redis queue for [Libraries.io](https://libraries.io) to process.
 
-## Types of Ingestors
+## Ingestor interface
 
-Ingestors must satisfy one of these interfaces:
+Ingestors must satisfy the `ingestors.PollingIngestor` interface. It is currently our only ingestor interface, and
+schedules ingestion of new versions at specific intervals (`ingestor.Schedule()`).
 
-* `ingestors.PollingIngestor`: these are scheduled to ingest new versions at specific intervals (`ingestor.Schedule()`).
-* `ingestors.StreamingIngestor`: these are always running in a goroutine, ingesting new releases via a channel
+## Throttling + the TTLer interface
+
+By default a `PackageVersion` -- unique by `Platform`/`Name`/`Version` -- will be limited to one published event per "ttl",
+which defaults to 24 hours. This duration can be overridden by implementing the TTLer interface in the ingestor.
 
 ## Ingestor Cursor Patterns
 
 Depper has to know where to pick up once it restarts, so there are several methods for storing such a cursor:
 
-* `ingestors.setBookmarkTime()` + `ingestor.getBookmarkTime()` [RECOMMENDED] : reads/sets a `time.Time` to redis (persistent)
-* `ingestors.setBookmark()` + `ingestor.getBookmark()`: reads/sets an arbitrary string to redis (persistent)
-* `LatestRun`: reads/sets a `time.Time` on the ingestor instance (non-persistent)
+- `ingestors.setBookmarkTime()` + `ingestor.getBookmarkTime()` [RECOMMENDED] : reads/sets a `time.Time` to redis (persistent)
+- `ingestors.setBookmark()` + `ingestor.getBookmark()`: reads/sets an arbitrary string to redis (persistent)
+- `LatestRun`: reads/sets a `time.Time` on the ingestor instance (non-persistent)
 
 ## Running Locally
 
@@ -42,4 +45,3 @@ You'll need the same version of our linter as CI, so reference the `".circleci/c
 1. merge PR into `main` branch
 2. `tl setenv libraries`
 3. `./bin/deploy.sh`
-

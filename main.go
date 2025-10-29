@@ -13,8 +13,6 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus/hooks/writer"
 
-	logrus_bugsnag "github.com/Shopify/logrus-bugsnag"
-	bugsnag "github.com/bugsnag/bugsnag-go"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
@@ -137,15 +135,6 @@ func setupLogger() {
 		FullTimestamp: true,
 		ForceQuote:    true,
 	})
-
-	// Configure bugsnag
-	bugsnag.Configure(bugsnag.Configuration{
-		APIKey:          os.Getenv("BUGSNAG_API_KEY"),
-		AppVersion:      os.Getenv("GIT_COMMIT"),
-		ProjectPackages: []string{"main", "github.com/librariesio/depper"},
-	})
-	hook, _ := logrus_bugsnag.NewBugsnagHook()
-	log.AddHook(hook)
 
 	// Send error-y logs to stderr and info-y logs to stdout
 	log.SetOutput(io.Discard)

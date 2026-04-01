@@ -44,6 +44,10 @@ func (ingestor *CPAN) ingestURL(feedUrl string) []data.PackageVersion {
 	}
 
 	for _, item := range feed.Items {
+		if item.PublishedParsed == nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("feed item missing published date, skipping")
+			continue
+		}
 		pieces := strings.Split(item.Title, "-")
 		if len(pieces) < 2 {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("unexpected feed item title format, skipping")

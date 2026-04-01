@@ -44,6 +44,10 @@ func (ingestor *Hackage) ingestURL(feedUrl string) []data.PackageVersion {
 	}
 
 	for _, item := range feed.Items {
+		if item.PublishedParsed == nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("feed item missing published date, skipping")
+			continue
+		}
 		nameAndVersion := strings.SplitN(item.Title, " ", 2)
 		if len(nameAndVersion) < 2 {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("unexpected feed item title format, skipping")

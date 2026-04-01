@@ -44,6 +44,10 @@ func (ingestor *Pub) ingestURL(feedUrl string) []data.PackageVersion {
 	}
 
 	for _, item := range feed.Items {
+		if item.UpdatedParsed == nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("feed item missing updated date, skipping")
+			continue
+		}
 		// version of name is the title, for example v0.0.2 of foobar_flutter
 		nameAndVersion := strings.SplitN(item.Title, " ", 3)
 		if len(nameAndVersion) < 3 {

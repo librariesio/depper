@@ -35,7 +35,7 @@ func randomHex(n int) string {
 	id := make([]byte, n)
 	_, err := io.ReadFull(rand.Reader, id)
 	if err != nil {
-		log.WithFields(log.Fields{"error": err})
+		log.WithFields(log.Fields{"error": err}).Error("failed to generate random job ID")
 	}
 	return hex.EncodeToString(id)
 }
@@ -59,5 +59,7 @@ func (lib *Sidekiq) Publish(packageVersion data.PackageVersion) {
 		log.WithFields(log.Fields{"publisher": "sidekiq"}).Error(err)
 		return
 	}
-	redis.Client.LPush(context.Background(), fmt.Sprintf("queue:%s", job.Queue), string(encoded))
+	if err := redis.Client.LPush(context.Background(), fmt.Sprintf("queue:%s", job.Queue), string(encoded)).Err(); err != nil {
+		log.WithFields(log.Fields{"publisher": "sidekiq"}).Error(err)
+	}
 }

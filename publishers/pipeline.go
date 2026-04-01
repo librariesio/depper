@@ -23,7 +23,9 @@ type Pipeline struct {
 }
 
 func NewPipeline() *Pipeline {
-	pipeline := &Pipeline{}
+	pipeline := &Pipeline{
+		queue: make(chan publishing, maxQueueSize),
+	}
 	go pipeline.run()
 
 	return pipeline
@@ -35,8 +37,6 @@ func (pipeline *Pipeline) Publish(ttl time.Duration, packageVersion data.Package
 }
 
 func (pipeline *Pipeline) run() {
-	pipeline.queue = make(chan publishing, maxQueueSize)
-
 	for publishing := range pipeline.queue {
 		pipeline.process(publishing)
 	}

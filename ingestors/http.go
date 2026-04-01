@@ -8,12 +8,15 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
+
 func depperGetUrl(url string) (*http.Response, error) {
 	return depperGetUrlWithHeaders(url, map[string]string{})
 }
 
 func depperGetUrlWithHeaders(url string, headers map[string]string) (*http.Response, error) {
-	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -24,7 +27,7 @@ func depperGetUrlWithHeaders(url string, headers map[string]string) (*http.Respo
 		req.Header.Set(key, value)
 	}
 
-	return client.Do(req)
+	return httpClient.Do(req)
 }
 
 func depperGetFeed(url string) (feed *gofeed.Feed, err error) {

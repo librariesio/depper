@@ -98,6 +98,11 @@ func (depper *Depper) registerIngestors() {
 func (depper *Depper) registerIngestor(ingestor ingestors.PollingIngestor) {
 	c := cron.New()
 	ingestAndPublish := func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.WithFields(log.Fields{"ingestor": ingestor.Name(), "panic": r}).Error("ingestor panicked")
+			}
+		}()
 		span := tracer.StartSpan("ingest_and_publish")
 		span.SetTag("ingestor", ingestor.Name())
 		defer span.Finish()

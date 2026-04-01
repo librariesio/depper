@@ -46,6 +46,10 @@ func (ingestor *Pub) ingestURL(feedUrl string) []data.PackageVersion {
 	for _, item := range feed.Items {
 		// version of name is the title, for example v0.0.2 of foobar_flutter
 		nameAndVersion := strings.SplitN(item.Title, " ", 3)
+		if len(nameAndVersion) < 3 {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("unexpected feed item title format, skipping")
+			continue
+		}
 		results = append(results,
 			data.PackageVersion{
 				Platform:     ingestor.Name(),

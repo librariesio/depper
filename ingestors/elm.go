@@ -48,6 +48,10 @@ func (ingestor *Elm) ingestURL(feedUrl string) []data.PackageVersion {
 	for _, item := range feed.Items {
 		parsed, _ := url.Parse(item.Link)
 		parts := strings.Split(parsed.Path, "/")
+		if len(parts) < 5 {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "link": item.Link}).Warn("unexpected feed item path format, skipping")
+			continue
+		}
 		discoveryLag := time.Since(*item.PublishedParsed)
 		results = append(results,
 			data.PackageVersion{

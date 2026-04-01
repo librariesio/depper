@@ -76,6 +76,10 @@ func (ingestor *PyPiRss) getUpdates() []data.PackageVersion {
 	}
 
 	for _, item := range feed.Items {
+		if item.PublishedParsed == nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("feed item missing published date, skipping")
+			continue
+		}
 		if len(strings.SplitN(item.Title, " ", 2)) < 2 {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("unexpected feed item title format, skipping")
 			continue
@@ -104,6 +108,10 @@ func (ingestor *PyPiRss) getNewPackages() []data.PackageVersion {
 
 	// Get releases for items not yet seen
 	for _, item := range feed.Items {
+		if item.PublishedParsed == nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("feed item missing published date, skipping")
+			continue
+		}
 		if !item.PublishedParsed.After(bookmark) {
 			continue
 		}
@@ -137,6 +145,10 @@ func (ingestor *PyPiRss) getReleases(packageName string) []data.PackageVersion {
 	}
 
 	for _, item := range feed.Items {
+		if item.PublishedParsed == nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("feed item missing published date, skipping")
+			continue
+		}
 		results = append(results,
 			data.PackageVersion{
 				Platform:     "pypi",

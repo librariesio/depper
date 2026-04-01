@@ -44,6 +44,10 @@ func (ingestor *cocoapods) ingestURL(feedUrl string) []data.PackageVersion {
 	}
 
 	for _, item := range feed.Items {
+		if item.UpdatedParsed == nil {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("feed item missing updated date, skipping")
+			continue
+		}
 		nameAndVersion := strings.SplitN(item.Title, " ", 3)
 		if len(nameAndVersion) < 3 {
 			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("unexpected feed item title format, skipping")

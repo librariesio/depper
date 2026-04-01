@@ -76,6 +76,10 @@ func (ingestor *PyPiRss) getUpdates() []data.PackageVersion {
 	}
 
 	for _, item := range feed.Items {
+		if len(strings.SplitN(item.Title, " ", 2)) < 2 {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("unexpected feed item title format, skipping")
+			continue
+		}
 		results = append(results, createUpdateItemPackageVersion(item))
 	}
 
@@ -105,6 +109,10 @@ func (ingestor *PyPiRss) getNewPackages() []data.PackageVersion {
 		}
 
 		linkBits := strings.Split(item.Link, "/")
+		if len(linkBits) < 2 {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "link": item.Link}).Warn("unexpected feed item link format, skipping")
+			continue
+		}
 		packageName := linkBits[len(linkBits)-2]
 
 		results = append(results, ingestor.getReleases(packageName)...)

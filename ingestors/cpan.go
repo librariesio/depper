@@ -45,6 +45,10 @@ func (ingestor *CPAN) ingestURL(feedUrl string) []data.PackageVersion {
 
 	for _, item := range feed.Items {
 		pieces := strings.Split(item.Title, "-")
+		if len(pieces) < 2 {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("unexpected feed item title format, skipping")
+			continue
+		}
 		results = append(results,
 			data.PackageVersion{
 				Platform:     ingestor.Name(),

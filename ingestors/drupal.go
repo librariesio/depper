@@ -53,6 +53,10 @@ func (ingestor *Drupal) Ingest() []data.PackageVersion {
 				var id string
 				if idAttr, exists := s.Attr("id"); exists {
 					parts := strings.SplitN(idAttr, "-", 2) // e.g. "node-1234"
+					if len(parts) < 2 {
+						log.WithFields(log.Fields{"ingestor": ingestor.Name(), "id": idAttr}).Warn("unexpected node id format, skipping")
+						return
+					}
 					id = parts[1]
 				}
 				packageResults := ingestor.getVersions(id, bookmark)
@@ -88,6 +92,10 @@ func (ingestor *Drupal) getVersions(id string, bookmark time.Time) []data.Packag
 	for _, item := range feed.Items {
 		createdAtTime, _ := time.Parse(time.RFC1123, item.Published)
 		nameAndVersion := strings.SplitN(item.Title, " ", 2) // e.g. ctools 7.x-1.19
+		if len(nameAndVersion) < 2 {
+			log.WithFields(log.Fields{"ingestor": ingestor.Name(), "title": item.Title}).Warn("unexpected release title format, skipping")
+			continue
+		}
 		if createdAtTime.After(bookmark) {
 			discoveryLag := time.Since(createdAtTime)
 			results = append(results,
